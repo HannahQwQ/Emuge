@@ -142,7 +142,16 @@ main,header,footer{position:relative;z-index:1}
 .phone video{width:100%;height:100%;object-fit:cover;display:block}
 .egg{position:absolute;left:calc(50% - min(28%,210px));top:7%;width:min(56%,420px);aspect-ratio:427/520;filter:drop-shadow(0 30px 40px rgba(10,8,40,.55));animation:eggfloat 7s ease-in-out infinite}
 @keyframes eggfloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
-.egg img.shell{position:absolute;inset:0;width:100%;height:100%}
+.egg img.shell{position:absolute;inset:0;width:100%;height:100%;transition:opacity .5s}
+.p3d{position:absolute;left:-14%;top:-8%;width:128%;height:116%;opacity:0;transition:opacity .5s;touch-action:pan-y;z-index:2}
+.p3d-ready{animation:none!important;filter:none!important}
+.p3d-ready .p3d{opacity:1}
+.p3d-ready img.shell,.p3d-ready .ps{opacity:0;pointer-events:none}
+.p3d-swatches{position:absolute;left:50%;bottom:-10%;transform:translateX(-50%);display:flex;gap:10px;z-index:3;opacity:0;transition:opacity .5s}
+.p3d-ready .p3d-swatches{opacity:1}
+.p3d-swatches button{width:18px;height:18px;border-radius:50%;border:0;padding:0;cursor:pointer;box-shadow:0 0 0 2px rgba(255,255,255,.35),0 4px 10px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
+.p3d-swatches button:hover{transform:scale(1.15)}
+.p3d-swatches button[aria-pressed="true"]{box-shadow:0 0 0 3px #fff,0 4px 12px rgba(0,0,0,.3);transform:scale(1.12)}
 .ps{position:absolute;left:14.2%;top:8.2%;width:72.6%;height:57.4%;border-radius:50% 50% 46% 46% / 64% 64% 36% 36%;overflow:hidden;background:#141518}
 .ps video{position:absolute;left:50%;top:50%;width:103%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;object-fit:cover}
 .ps::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.14) 0,transparent 30%);pointer-events:none}
@@ -570,7 +579,7 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
       <div class="floaty" style="left:0;bottom:24%;width:clamp(56px,6vw,96px)" data-par="70"><img src="assets/v-eggplant-6.webp" alt=""></div>
       <div class="card reveal">
         <div class="media personal" id="personalMedia">
-          <div class="egg" id="egg">
+          <div class="egg" id="egg" data-model="media/personal-device.glb">
             <img class="shell" src="assets/egg-green.webp" alt="蛋形个人装置" width="427" height="520">
             <div class="ps"><video id="stepVideo" src="media/personal-step1.mp4" muted playsinline preload="auto" aria-label="个人装置屏幕录屏，按步骤播放"></video></div>
           </div>
@@ -1015,6 +1024,8 @@ if(window.gsap && window.ScrollTrigger && !REDUCED){
 </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="machine3d.js"></script>
+<script src="personal3d.js"></script>
 </body>
 </html>
