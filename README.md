@@ -7,11 +7,12 @@
 ```
 index.html        页面本体：结构、样式和大部分交互脚本（含 CONFIG）
 machine3d.js      首页可交互的 3D 公共装置（three.js）+ 像素屏幕动画
+walker3d.js       公共装置卡片外沿循环行走的 3D 小装置（复用 emuge-machine.glb，脚贴边框、腿部摆动）
 personal3d.js     个人装置 3D 模型：拖动旋转、五色外壳切换、屏幕播放步骤录屏（视频贴图）
 assets/           图片：装置渲染图、蛋形装置、蔬菜表情（v-<类别>-<序号>.webp）
 media/            视频与模型
   personal-step1~4.mp4 个人装置屏幕录屏，按“读表情 / 拖轮盘选蔬菜 / 加特殊状态 / 种进校园地图”分段（已裁成圆形）
-  public-screen.mp4    公共装置屏幕录屏
+  public-screen.mp4    公共装置屏幕录屏（2:1，已去掉四周深色边）
   emuge-machine.glb    公共装置 3D 模型（贴图已压缩，约 1MB）
   personal-device.glb  个人装置 3D 模型（五种颜色，约 3MB）
 ```

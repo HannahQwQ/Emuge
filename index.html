@@ -174,31 +174,14 @@ main,header,footer{position:relative;z-index:1}
 
 /* public */
 .media.public{background:linear-gradient(160deg,#1A1960 0%,#2E2FA0 50%,#5D63E8 100%);display:grid;place-items:center;padding:clamp(14px,3vw,40px)}
-.screen-frame{position:relative;width:100%;aspect-ratio:1120/712;border-radius:clamp(10px,1.4vw,18px);overflow:hidden;box-shadow:0 0 0 clamp(6px,.8vw,10px) #3B2F25,0 30px 60px rgba(5,6,40,.5);background:#F7F3E8;transition:opacity .4s}
+.screen-frame{position:relative;width:100%;aspect-ratio:1120/558;border-radius:clamp(10px,1.4vw,18px);overflow:hidden;box-shadow:0 0 0 clamp(6px,.8vw,10px) #3B2F25,0 30px 60px rgba(5,6,40,.5);background:#F7F3E8;transition:opacity .4s}
 .pub-slot,.pub-slot video{width:100%;height:100%;display:block;object-fit:cover}
 .pub-empty{width:100%;height:100%;display:grid;place-items:center;text-align:center;padding:12px;background:#F7F3E8;color:#3E4F35;font-size:clamp(11px,1.2vw,15px)}
 .pub-empty strong{display:block;font-size:1.2em}
-.sim-screen .pub-empty{font-size:clamp(8px,.8vw,11px)}
-.sim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .5s}
-.public.simming .screen-frame.auto{opacity:0}
-.public.simming .sim{opacity:1;pointer-events:auto}
-.sim-device{position:relative;height:94%;width:auto;aspect-ratio:941/1000;max-width:100%}
-.sim-device>img{width:100%;height:100%}
-.sim-screen{position:absolute;left:15.5%;top:13.7%;width:38.2%;height:22.9%;border-radius:4px;overflow:hidden;background:#F7F3E8}
 
-.hot{position:absolute;transform:translate(-50%,-50%);border-radius:14px;border:0;background:transparent;cursor:pointer;box-shadow:0 0 0 2px rgba(255,255,255,0);transition:box-shadow .2s,background .2s}
-.hot::after{content:"";position:absolute;inset:-6px;border-radius:inherit;box-shadow:0 0 0 2px rgba(242,194,48,.9);opacity:0;animation:ping 2.4s ease-out infinite;animation-delay:var(--d,0s)}
-.public.simming .hot::after{opacity:1}
-.hot:hover,.hot:focus-visible{background:rgba(255,255,255,.2);box-shadow:0 0 0 3px var(--corn)}
-@keyframes ping{0%{transform:scale(.9);opacity:.9}70%,100%{transform:scale(1.35);opacity:0}}
-.hot .tip{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);white-space:nowrap;background:#191A3A;color:#fff;font-size:12px;font-weight:700;padding:4px 8px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none}
-.hot:hover .tip,.hot:focus-visible .tip{opacity:1}
-.sim-hint{font-size:14px;color:var(--muted);margin:10px 0 0}
-.walker{position:absolute;left:0;top:0;z-index:5;pointer-events:none;will-change:transform}
-.walker img{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:100%;width:auto;max-width:none;transition:opacity .25s}
-.walker .front{opacity:0}
-.walker.stop .front{opacity:1}
-.walker.stop .side{opacity:0}
+.walker{position:absolute;left:0;top:0;z-index:5;pointer-events:none;will-change:transform;transform-origin:50% 100%;opacity:0;transition:opacity .5s}
+.walker.ready{opacity:1}
+.walker canvas{display:block;width:100%;height:100%}
 
 /* demo */
 .media.demo{background:linear-gradient(160deg,#173826 0%,#2E6B45 50%,#6BDE8A 100%);display:grid;place-items:center;padding:clamp(14px,3vw,40px)}
@@ -604,30 +587,17 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
       <div class="card reveal" id="publicCard">
         <div class="media public" id="publicMedia">
           <div class="screen-frame auto"><div class="pub-slot" data-slot="auto"></div></div>
-          <div class="sim" id="sim">
-            <div class="sim-device">
-              <img src="assets/arcade-front.webp" alt="公共装置正面" width="941" height="1000">
-              <div class="sim-screen"><div class="pub-slot" data-slot="sim"></div></div>
-              <button class="hot" style="left:7.2%;top:29%;width:14%;height:13%;border-radius:50%;--d:0s"><span class="tip">水阀 · 浇水</span></button>
-              <button class="hot" style="left:12.2%;top:50.5%;width:6%;height:12%;--d:.3s"><span class="tip">遮光</span></button>
-              <button class="hot" style="left:21.3%;top:49.7%;width:7.6%;height:6.5%;--d:.6s"><span class="tip">戳一戳</span></button>
-              <button class="hot" style="left:30.8%;top:49.5%;width:7.6%;height:6.5%;--d:.9s"><span class="tip">加热</span></button>
-              <button class="hot" style="left:40.4%;top:49.5%;width:7.6%;height:6.5%;--d:1.2s"><span class="tip">锤子</span></button>
-            </div>
-          </div>
         </div>
         <div class="text">
           <div class="eyebrow" style="color:var(--corn)"><i></i>公共装置 · Mood commons</div>
           <h2 id="g-title">A garden that answers back.</h2>
           <p>种子会落在校园地图上。路过的人转动水壶把手选一个地方，那里的蔬菜就掉进重力箱。浇水、加热、遮光、戳一戳、敲一锤，每一种回应都会变成声音，传回种下它的人。</p>
           <div class="actions">
-            <button class="pill pill-green" id="simToggle" aria-pressed="false">进入装置模式</button>
             <a class="pill pill-ghost js-proto" href="#" target="_blank" rel="noopener">打开完整原型 ↗</a>
           </div>
-          <p class="sim-hint" id="simHint" hidden>把鼠标移到发光的部件上看它的作用；要亲手操作，请打开完整原型。</p>
         </div>
       </div>
-      <div class="walker" id="walker" aria-hidden="true"><img class="side" src="assets/arcade-side.webp" alt=""><img class="front" src="assets/arcade-front-solo.webp" alt=""></div>
+      <div class="walker" id="walker" aria-hidden="true" data-model="media/emuge-machine.glb"></div>
     </div>
   </section>
 
@@ -963,33 +933,6 @@ const LETTER_PLANES=(function letterPlanes(){
       : `<div class="pub-empty"><div><strong>公共装置录屏待补充</strong>校园地图 → 重力箱 → 回应</div></div>`;
   });
   document.querySelectorAll('video.rec').forEach(v=>{ v.muted=true; watch(v,vis=>{ if(vis&&!REDUCED){ v.play().catch(()=>{}); } else v.pause(); }); });
-  const media=document.getElementById('publicMedia'), btn=document.getElementById('simToggle'), hint=document.getElementById('simHint');
-  btn.addEventListener('click',()=>{ const on=!media.classList.contains('simming'); media.classList.toggle('simming',on); btn.setAttribute('aria-pressed',on); btn.textContent=on?'回到屏幕演示':'进入装置模式'; hint.hidden=!on; });
-})();
-
-/* ============================================================
-   Walker — the cardboard machine walks around the frosted card
-   ============================================================ */
-(function walker(){
-  const wrap=document.getElementById('publicWrap'), card=document.getElementById('publicCard'), el=document.getElementById('walker');
-  let geo=null, s=0, stopUntil=0, nextStop=performance.now()+rnd(3500,6000), on=false, last=0, phase=0;
-  function measure(){ const wr=wrap.getBoundingClientRect(), cr=card.getBoundingClientRect(); const h=Math.max(52,Math.min(96,cr.width*.075)); const r=parseFloat(getComputedStyle(card).borderTopLeftRadius)||48;
-    const x=cr.left-wr.left, y=cr.top-wr.top, w=cr.width, hh=cr.height, o=h/2-3, R=r+o;
-    const L=[w-2*r, Math.PI/2*R, hh-2*r, Math.PI/2*R, w-2*r, Math.PI/2*R, hh-2*r, Math.PI/2*R]; const total=L.reduce((a,b)=>a+b,0);
-    geo={x,y,w,hh,r,o,R,L,total,h}; el.style.width=(h*.62)+'px'; el.style.height=h+'px'; }
-  function at(d){ const g=geo; d=((d%g.total)+g.total)%g.total; const {x,y,w,hh,r,o,R,L}=g; let i=0; while(d>L[i]){ d-=L[i]; i++; }
-    const arc=(cx,cy,a0)=>{ const a=a0+d/R; return [cx+Math.cos(a)*R, cy+Math.sin(a)*R, a+Math.PI/2]; };
-    switch(i){ case 0:return [x+r+d,y-o,0]; case 1:return arc(x+w-r,y+r,-Math.PI/2); case 2:return [x+w+o,y+r+d,Math.PI/2]; case 3:return arc(x+w-r,y+hh-r,0);
-      case 4:return [x+w-r-d,y+hh+o,Math.PI]; case 5:return arc(x+r,y+hh-r,Math.PI/2); case 6:return [x-o,y+hh-r-d,Math.PI*1.5]; default:return arc(x+r,y+r,Math.PI); } }
-  function draw(now){ const [px,py,a]=at(s); const stopped=now<stopUntil; el.classList.toggle('stop',stopped);
-    const bob=stopped?-Math.abs(Math.sin(now/180))*8:-Math.abs(Math.sin(phase))*4, wob=stopped?0:Math.sin(phase)*.06;
-    el.style.transform=`translate(${px - geo.h*.31}px,${py - geo.h/2}px) rotate(${a+wob}rad) translateY(${bob}px)`; }
-  function tick(now){ if(!on) return; const dt=Math.min(.05,(now-(last||now))/1000); last=now;
-    if(now>=stopUntil){ s+=dt*Math.max(60,geo.w*.07); phase+=dt*12; if(now>nextStop){ stopUntil=now+1800; nextStop=now+1800+rnd(4000,8000); } }
-    draw(now); requestAnimationFrame(tick); }
-  measure(); new ResizeObserver(measure).observe(card);
-  if(REDUCED){ s=geo.L[0]*.8; draw(0); return; }
-  watch(wrap,v=>{ if(v&&!on){on=true;last=0;requestAnimationFrame(tick);} else if(!v) on=false; });
 })();
 
 /* ============================================================
@@ -1034,5 +977,6 @@ if(window.gsap && window.ScrollTrigger && !REDUCED){
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="machine3d.js"></script>
 <script src="personal3d.js"></script>
+<script src="walker3d.js"></script>
 </body>
 </html>
