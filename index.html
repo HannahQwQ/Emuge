@@ -257,6 +257,10 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
 @media (max-width:570px){footer .wrap{grid-template-columns:1fr 1fr}.foot-col-brand{grid-column:1/-1}}
 
 .floaty{position:absolute;z-index:6;pointer-events:none;will-change:transform}
+/* every vegetable on the page lives in one fixed layer (float → fall into a pile at the bottom → fly home) */
+#vegLayer{position:fixed;inset:0;z-index:7;pointer-events:none;overflow:hidden}
+#vegLayer .veg{position:absolute;left:0;top:0;will-change:transform;visibility:hidden}
+#vegLayer .veg img{width:100%;height:100%;display:block;filter:drop-shadow(0 6px 10px rgba(6,6,30,.35))}
 .floaty img{animation:bob 7s ease-in-out infinite}
 .floaty.blur img{filter:blur(1.88px);opacity:.85}
 
@@ -277,6 +281,7 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
 </head>
 <body>
 <canvas id="stars" aria-hidden="true"></canvas>
+<div id="vegLayer" aria-hidden="true"></div>
 
 <header class="nav" id="nav">
   <div class="wrap">
@@ -588,8 +593,6 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
 </svg>
 </div>
       <div class="hero-machine" id="heroMachine" data-model="media/emuge-machine.glb"><span class="beam" aria-hidden="true"></span><img class="poster" src="assets/arcade-34.webp" alt="Emuge 公共装置：纸板做的街机，带水阀、按钮和摇杆" width="802" height="900"></div>
-      <div class="float" style="left:1%;top:12%;width:6%" data-depth="30"><img src="assets/v-mushroom-1.webp" alt=""></div>
-      <div class="float" style="right:2%;top:60%;width:6%" data-depth="-24"><img src="assets/v-corn-8.webp" alt=""></div>
       <div class="hero-text">
         <div class="hero-copy"><div class="title-wrap" id="titleWrap"><h1 id="hero-title">Feelings you can grow and hear.</h1></div></div>
         <div class="hero-tag" aria-hidden="true"><b>emoji <span>·</span></b><b>music <span>·</span></b><b>vegetable</b></div>
@@ -603,8 +606,6 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
 
   <section class="feature" id="personal" aria-labelledby="p-title">
     <div class="wrap feature-inner">
-      <div class="floaty" style="right:14%;top:-50px;width:clamp(48px,7vw,78px)" data-par="-90"><img src="assets/v-cabbage-6.webp" alt=""></div>
-      <div class="floaty" style="left:0;bottom:24%;width:clamp(42px,6vw,72px)" data-par="70"><img src="assets/v-eggplant-6.webp" alt=""></div>
       <div class="card reveal">
         <div class="media personal" id="personalMedia">
           <div class="egg" id="egg" data-model="media/personal-device.glb">
@@ -627,7 +628,6 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
 
   <section class="feature" id="public" aria-labelledby="g-title">
     <div class="wrap feature-inner" id="publicWrap">
-      <div class="floaty" style="left:4%;top:-30px;width:clamp(42px,6vw,72px)" data-par="80"><img src="assets/v-corn-6.webp" alt=""></div>
       <div class="card reveal" id="publicCard">
         <div class="media public" id="publicMedia">
           <div class="screen-frame auto"><div class="pub-slot" data-slot="auto"></div></div>
@@ -647,8 +647,6 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
 
   <section class="feature" id="demo" aria-labelledby="d-title">
     <div class="wrap feature-inner">
-      <div class="floaty" style="left:0;top:-20px;width:clamp(42px,6vw,72px)" data-par="70"><img src="assets/v-chili-5.webp" alt=""></div>
-      <div class="floaty" style="right:3%;bottom:-40px;width:clamp(45px,6vw,72px)" data-par="-80"><img src="assets/v-eggplant-3.webp" alt=""></div>
       <div class="card flip reveal">
         <div class="media demo">
           <div class="video-slot" id="videoSlot"></div>
@@ -1111,6 +1109,109 @@ const LETTER_PLANES=(function letterPlanes(){
     gsap.fromTo('.person img',{clipPath:'inset(-30% -30% 130% -30%)',opacity:.2},{clipPath:'inset(-30% -30% -30% -30%)',opacity:1,duration:1.3,ease:'power2.out',stagger:.18,clearProps:'clipPath',scrollTrigger:{trigger:st,start:'top 78%'}});
     gsap.from('.person figcaption',{opacity:0,y:10,duration:.6,stagger:.18,delay:.8,scrollTrigger:{trigger:st,start:'top 78%'}});
   }
+})();
+
+/* ============================================================
+   Vegetables: float in place → at the bottom of the page they all
+   drop under gravity and pile up (colliding, pushable by the
+   cursor) → scrolling back up sends each one home.
+   ============================================================ */
+(function vegs(){
+  const layer=document.getElementById('vegLayer'); if(!layer) return;
+  // [section, x (0-1 of viewport width), y (0-1 of section height), image, scale, phone?]
+  const HOMES=[
+    ['.hero',.035,.13,'mushroom-1',1,1],['.hero',.955,.6,'corn-8',1,1],['.hero',.05,.8,'cabbage-2',.9,0],['.hero',.93,.9,'chili-3',.85,0],
+    ['#personal',.9,.02,'cabbage-6',1.05,1],['#personal',.03,.62,'eggplant-6',1,0],['#personal',.96,.6,'chili-2',.9,0],['#personal',.06,.18,'mushroom-4',.85,1],
+    ['#public',.05,.0,'corn-6',1,1],['#public',.95,.3,'eggplant-1',.95,0],['#public',.03,.78,'cabbage-8',.95,0],['#public',.93,.88,'mushroom-0',.9,1],
+    ['#demo',.03,.02,'chili-5',1,1],['#demo',.96,.92,'eggplant-3',1,0],['#demo',.95,.22,'corn-3',.9,0],['#demo',.05,.62,'mushroom-5',.85,1],
+    ['#team',.04,.12,'chili-7',.95,1],['#team',.95,.1,'cabbage-4',1,1],['#team',.97,.5,'corn-1',.85,0],['#team',.02,.48,'eggplant-7',.85,0]
+  ];
+  const phone=()=>innerWidth<700;
+  let B=[], W=innerWidth, H=innerHeight;
+  function build(){
+    layer.innerHTML=''; B=[];
+    HOMES.forEach(([sel,fx,fy,img,sc,ph],i)=>{ if(phone()&&!ph) return; const sec=document.querySelector(sel); if(!sec) return;
+      const el=document.createElement('div'); el.className='veg'; const im=new Image(); im.src='assets/v-'+img+'.webp'; im.alt=''; el.appendChild(im); layer.appendChild(el);
+      const b={el,im,sec,fx,fy,sc,w:50,h:50,r:22,hx:0,hy:0,x:0,y:0,vx:0,vy:0,a:0,va:0,ox:0,oy:0,ovx:0,ovy:0,ph:rnd(0,6.28),sp:rnd(.6,1),tilt:rnd(-8,8),shown:false,delay:0};
+      im.onload=()=>size(b); if(im.complete) size(b); B.push(b); });
+    measure();
+  }
+  function size(b){ const base=(phone()?Math.max(30,Math.min(42,W*.09)):Math.max(40,Math.min(72,W*.048)))*b.sc, a=(b.im.naturalWidth/b.im.naturalHeight)||1;
+    if(a>=1){ b.w=base; b.h=base/a; } else { b.h=base; b.w=base*a; }
+    b.r=(b.w+b.h)*.22; b.el.style.width=b.w+'px'; b.el.style.height=b.h+'px'; }
+  function measure(){ W=innerWidth; H=innerHeight; const sy=scrollY;
+    B.forEach(b=>{ size(b); const r=b.sec.getBoundingClientRect(); b.hx=Math.max(b.w/2+2,Math.min(W-b.w/2-2,b.fx*W)); b.hy=r.top+sy+b.fy*r.height; }); }
+  build(); addEventListener('load',measure); new ResizeObserver(measure).observe(document.body);
+  let lastPhone=phone(); addEventListener('resize',()=>{ if(phone()!==lastPhone){ lastPhone=phone(); build(); mode='float'; } });
+
+  // pointer
+  let mx=-999,my=-999,mvx=0,mvy=0,pmx=0,pmy=0;
+  addEventListener('pointermove',e=>{ mx=e.clientX; my=e.clientY; },{passive:true});
+  document.addEventListener('pointerleave',()=>{ mx=my=-999; });
+
+  let mode='float', T=0, retT=0;
+  const docH=()=>document.documentElement.scrollHeight;
+  const atBottom=()=>scrollY+innerHeight>=docH()-3;
+  const homeScreen=(b,t)=>[b.hx+b.ox, b.hy-scrollY+Math.sin(t*b.sp+b.ph)*7+b.oy];
+
+  function startFall(){ mode='fall'; const t=T;
+    B.forEach((b,i)=>{ const [x,y]=homeScreen(b,t); b.x=x; b.y=y;
+      // the ones far up the page come raining in from just above the screen
+      if(b.y<-b.r) b.y=-b.r-rnd(20,420);
+      if(b.y>H-b.r) b.y=H-b.r-1;
+      b.vx=rnd(-25,25); b.vy=rnd(0,80); b.a=b.tilt*Math.PI/180; b.va=rnd(-2,2); }); }
+  function startReturn(){ mode='return'; retT=0; B.forEach((b,i)=>{ b.sx=b.x; b.sy=b.y; b.sa=b.a; b.delay=i*.025; }); }
+
+  function physics(dt){
+    const g=2400, e=.28, mR=30; const n=B.length;
+    const ext=b=>{ const c=Math.abs(Math.cos(b.a)), s=Math.abs(Math.sin(b.a)); b.ey=Math.max(b.r,(c*b.h+s*b.w)*.46); b.ex=Math.max(b.r,(c*b.w+s*b.h)*.46); };
+    for(const b of B){ b.vy+=g*dt; b.x+=b.vx*dt; b.y+=b.vy*dt; b.a+=b.va*dt; b.va*=.99; ext(b);
+      if(b.y+b.ey>H){ b.y=H-b.ey; if(b.vy>0) b.vy=b.vy>90?-b.vy*e:0; b.vx*=.9; b.va+=(b.vx/b.r-b.va)*.3;
+        // long vegetables (corn, chili) tip over onto their side instead of standing on a point
+        if(Math.max(b.w,b.h)>1.3*Math.min(b.w,b.h)){ const lie=b.w>b.h?0:Math.PI/2, d=Math.atan2(Math.sin(2*(lie-b.a)),Math.cos(2*(lie-b.a)))/2; b.va+=d*14*dt*60*.1; } }
+      if(b.x-b.ex<0){ b.x=b.ex; b.vx=Math.abs(b.vx)*e; } if(b.x+b.ex>W){ b.x=W-b.ex; b.vx=-Math.abs(b.vx)*e; } }
+    for(let it=0;it<4;it++){
+      for(let i=0;i<n;i++){ const p=B[i];
+        for(let j=i+1;j<n;j++){ const q=B[j]; let dx=q.x-p.x, dy=q.y-p.y, d=Math.hypot(dx,dy), m=p.r+q.r; if(d>=m||d===0) continue;
+          const nx=dx/d, ny=dy/d, o=(m-d)/2; p.x-=nx*o; p.y-=ny*o; q.x+=nx*o; q.y+=ny*o;
+          const rvx=q.vx-p.vx, rvy=q.vy-p.vy, vn=rvx*nx+rvy*ny;
+          if(vn<0){ const jn=-(1+e)*vn/2; p.vx-=jn*nx; p.vy-=jn*ny; q.vx+=jn*nx; q.vy+=jn*ny;
+            // a little friction so piles settle and things roll off each other
+            const tx=-ny, ty=nx, vt=rvx*tx+rvy*ty, jt=vt*.12; p.vx+=jt*tx; p.vy+=jt*ty; q.vx-=jt*tx; q.vy-=jt*ty; p.va-=vt*.004; q.va-=vt*.004; } }
+        // the cursor is a moving body too: it shoves what it touches, harder the faster it moves
+        if(mx>-900){ let dx=p.x-mx, dy=p.y-my, d=Math.hypot(dx,dy), m=p.r+mR;
+          if(d<m&&d>0){ const nx=dx/d, ny=dy/d; p.x+=nx*(m-d); p.y+=ny*(m-d);
+            const push=Math.max(0,mvx*nx+mvy*ny)+140, vn=p.vx*nx+p.vy*ny; if(vn<push){ p.vx+=(push-vn)*nx; p.vy+=(push-vn)*ny; } p.va+=(mvx*ny-mvy*nx)*.0015; } } }
+      for(const b of B){ if(b.y+b.ey>H) b.y=H-b.ey; if(b.x-b.ex<0) b.x=b.ex; if(b.x+b.ex>W) b.x=W-b.ex; } }
+    for(const b of B){ if(Math.abs(b.vx)<6&&b.y+b.ey>=H-.5) b.vx=0; }
+  }
+
+  function wobble(b,dt,sx,sy){ // floating: a soft springy shove away from the cursor
+    const dx=sx-mx, dy=sy-my, d=Math.hypot(dx,dy), R=130;
+    if(d<R&&d>0){ const f=(1-d/R)*(900+Math.hypot(mvx,mvy)*.8); b.ovx+=dx/d*f*dt; b.ovy+=dy/d*f*dt; }
+    b.ovx+=(-b.ox*38-b.ovx*5.5)*dt; b.ovy+=(-b.oy*38-b.ovy*5.5)*dt; b.ox+=b.ovx*dt; b.oy+=b.ovy*dt; }
+
+  const show=(b,v)=>{ if(b.shown!==v){ b.shown=v; b.el.style.visibility=v?'visible':'hidden'; } };
+  const put=(b,x,y,a)=>{ b.el.style.transform=`translate(${(x-b.w/2).toFixed(1)}px,${(y-b.h/2).toFixed(1)}px) rotate(${a.toFixed(3)}rad)`; };
+
+  let last=0;
+  function frame(now){
+    const dt=Math.min(.033,(now-(last||now))/1000)||.016; last=now; T+=dt; W=innerWidth; H=innerHeight;
+    mvx=(mx-pmx)/dt; mvy=(my-pmy)/dt; if(Math.abs(mx-pmx)>300){ mvx=mvy=0; } pmx=mx; pmy=my;
+    if(!REDUCED){ if(mode!=='fall'&&atBottom()) startFall(); else if(mode==='fall'&&scrollY+innerHeight<docH()-60) startReturn(); }
+    if(mode==='fall'){ const st=dt/2; physics(st); physics(st); B.forEach(b=>{ show(b,true); put(b,b.x,b.y,b.a); }); }
+    else if(mode==='return'){ retT+=dt; let done=true;
+      B.forEach(b=>{ wobble(b,dt,b.x,b.y); const [hx,hy]=homeScreen(b,T); const k=Math.max(0,Math.min(1,(retT-b.delay)/.95)); if(k<1) done=false;
+        const ez=1-Math.pow(1-k,3), arc=Math.sin(k*Math.PI)*-60;
+        b.x=b.sx+(hx-b.sx)*ez; b.y=b.sy+(hy-b.sy)*ez+arc; b.a=b.sa*(1-ez)+b.tilt*Math.PI/180*ez;
+        show(b,b.y>-b.h-200&&b.y<H+b.h+200); put(b,b.x,b.y,b.a); });
+      if(done) mode='float'; }
+    else B.forEach(b=>{ const [x0,y0]=homeScreen(b,T); const vis=y0>-b.h-60&&y0<H+b.h+60; show(b,vis); if(!vis) return;
+      if(!REDUCED) wobble(b,dt,x0,y0); const [x,y]=homeScreen(b,T); b.x=x; b.y=y; b.a=(b.tilt+Math.sin(T*b.sp*.8+b.ph)*4+b.ox*.25)*Math.PI/180; put(b,x,y,b.a); });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  window.__veg={get mode(){return mode}, B};
 })();
 
 /* ============================================================
