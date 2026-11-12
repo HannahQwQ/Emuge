@@ -169,14 +169,14 @@
     camera.userData.target=fc; camera.userData.dist=Math.max(fs.y,fs.x*1.15)/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)))*1.12;
     root.rotation.y=-.42; baseYaw=-.42;
     // cat living in the cardboard box: peeks out, looks around, blinks, ducks back
-    if(boxParts.length){ const bb=new THREE.Box3(); boxParts.forEach(o=>bb.expandByObject(o)); const sz=bb.getSize(new THREE.Vector3()), cc=bb.getCenter(new THREE.Vector3());
+    if(boxParts.length){ const walls=boxParts.filter(o=>/CatBox_(Front|Back|Left|Right|Bottom)$/.test(o.name)); const bb=new THREE.Box3(); (walls.length?walls:boxParts).forEach(o=>bb.expandByObject(o)); const sz=bb.getSize(new THREE.Vector3()), cc=bb.getCenter(new THREE.Vector3());
       const tl=new THREE.TextureLoader(), base=host.dataset.assets||'assets/';
       const texOpen=tl.load(base+'cat.webp'), texBlink=tl.load(base+'cat-blink.webp'); [texOpen,texBlink].forEach(t=>{ t.encoding=THREE.sRGBEncoding; t.anisotropy=4; });
       renderer.localClippingEnabled=true; const clip=new THREE.Plane(V(0,1,0),0);
       const mat=new THREE.SpriteMaterial({map:texOpen,transparent:true,alphaTest:.04,toneMapped:false,clippingPlanes:[clip]});
-      const spr=new THREE.Sprite(mat); spr.center.set(.5,0); const h=Math.min(sz.x,sz.z)*1.2; spr.scale.set(h*640/608,h,1);
+      const spr=new THREE.Sprite(mat); spr.center.set(.5,0); const h=Math.min(sz.x,sz.z)*.95; spr.scale.set(h*640/608,h,1);
       const local=model.worldToLocal(cc.clone()); const rimY=model.worldToLocal(V(0,bb.max.y,0)).y;
-      spr.position.set(local.x,rimY-h,local.z+sz.z*.05); spr.visible=false; spr.userData.part='cat'; model.add(spr); hoverables.push(spr);
+      spr.position.set(local.x,rimY-h,local.z); spr.visible=false; spr.userData.part='cat'; model.add(spr); hoverables.push(spr);
       const floorL=model.worldToLocal(V(cc.x,bb.min.y+sz.y*.04,cc.z));
       cat={spr,mat,clip,floorL,texOpen,texBlink,h,rimY,state:'hidden',t:0,wait:1.2,up:0,jump:0,vj:0,blinkT:0,nextBlink:.8,tilt:0}; }
     ready=true; resize(); host.classList.add('m3d-ready'); screenDraw(); render();
@@ -254,7 +254,7 @@
         else if(c.state==='down'){ c.up=Math.max(0,1-c.t/.55); if(c.up<=0){ c.state='hidden'; c.t=0; c.wait=1.4+Math.random()*2.2; } }
         if(c.state!=='hidden'){ c.spr.visible=true; c.clip.constant=-model.localToWorld(c.floorL.clone()).y; const e=c.up<1?1-Math.pow(1-c.up,3):1;
           c.vj+=(-80*c.jump-8*c.vj)*dt; c.jump+=c.vj*dt;
-          const peekH=c.h*.5; c.spr.position.y=c.rimY-c.h+e*peekH+Math.max(0,c.jump)*c.h*.12+(c.state==='peek'?Math.sin(c.t*3)*c.h*.01:0);
+          const peekH=c.h*.55; c.spr.position.y=c.rimY-c.h+e*peekH+Math.max(0,c.jump)*c.h*.12+(c.state==='peek'?Math.sin(c.t*3)*c.h*.01:0);
           // look around: lean left/right while peeking
           const look=c.state==='peek'?Math.sin(c.t*1.6)*.12:0; c.tilt+=(look-c.tilt)*Math.min(1,dt*5); c.mat.rotation=c.tilt;
           // blink every couple of seconds (sometimes twice)
