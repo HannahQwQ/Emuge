@@ -17,8 +17,11 @@
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(26,1,.05,50);
   scene.add(new THREE.HemisphereLight(0xfff4e2,0x4a4570,.9));
-  const key=new THREE.DirectionalLight(0xfff1dc,1.7); key.position.set(2.5,4,4); scene.add(key);
-  const rim=new THREE.DirectionalLight(0x9db4ff,1.1); rim.position.set(-3,2,-2); scene.add(rim);
+  const key=new THREE.DirectionalLight(0xfff1dc,1.5); key.position.set(2.5,4,4); scene.add(key);
+  // top light: brightens the marquee, screen bezel and console so the machine reads in front of the letters
+  const top=new THREE.SpotLight(0xfff0d2,2.4,0,.55,.7,1); top.position.set(.2,6,1.6); top.target.position.set(0,.9,0); scene.add(top); scene.add(top.target);
+  const rim=new THREE.DirectionalLight(0xa9bcff,1.9); rim.position.set(-3,2.5,-2.5); scene.add(rim);
+  const rim2=new THREE.DirectionalLight(0xffd9a8,.9); rim2.position.set(3.5,1.5,-2); scene.add(rim2);
   const fill=new THREE.DirectionalLight(0xffffff,.55); fill.position.set(-2,1,3); scene.add(fill);
 
   const root=new THREE.Group(); scene.add(root);      // user yaw/pitch

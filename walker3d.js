@@ -72,7 +72,7 @@
   // ---- the card's outer border as a path ----
   let geo=null, s=0, phase=0;
   function measure(){ const wr=wrap.getBoundingClientRect(), cr=card.getBoundingClientRect(); if(!cr.width) return;
-    const h=Math.max(46,Math.min(92,cr.width*.07)), w=h*aspect;
+    const h=Math.max(35,Math.min(69,cr.width*.07)), w=h*aspect;
     const r=parseFloat(getComputedStyle(card).borderTopLeftRadius)||48;
     const x=cr.left-wr.left, y=cr.top-wr.top, W=cr.width, H=cr.height;
     const L=[W-2*r,Math.PI/2*r,H-2*r,Math.PI/2*r,W-2*r,Math.PI/2*r,H-2*r,Math.PI/2*r];
