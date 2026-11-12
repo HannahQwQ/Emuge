@@ -12,7 +12,6 @@
   const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canvas=document.createElement('canvas'); el.appendChild(canvas);
   const bubble=document.createElement('span'); bubble.className='walker-bubble'; el.appendChild(bubble);
-  const hit=document.createElement('span'); hit.className='walker-hit'; el.appendChild(hit);   // generous hover/click target
   const LINES=['嗨～','今天心情怎么样？','♪ ♫','来浇浇水吧','种下一颗心情？'];
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
   renderer.setPixelRatio(Math.min(2,devicePixelRatio||1)); renderer.outputEncoding=THREE.sRGBEncoding;
@@ -91,8 +90,20 @@
   function greet(len){ if(mode!=='walk') return; mode='greet'; mt=0; greetLen=len||3.2; sinceGreet=0; }
   let greetLen=3.2;
   function jump(){ if(mode==='jump') return; mode='jump'; mt=0; say(true); bubble.textContent='♪'; }
-  hit.addEventListener('pointerenter',()=>{ if(mode==='walk') greet(2.4); });
-  hit.addEventListener('click',e=>{ e.preventDefault(); jump(); });
+  // Hover/click are hit-tested in code against the walker's current position and angle,
+  // so they work while it moves and even if it walks under a still cursor (DOM pointer
+  // events on a constantly moving, rotated element are unreliable across browsers).
+  let mx=-1e5, my=-1e5, pose=null, hovering=false;
+  addEventListener('pointermove',e=>{ mx=e.clientX; my=e.clientY; },{passive:true});
+  addEventListener('scroll',()=>{ hovering=false; },{passive:true});
+  function inside(x,y){ if(!pose||!geo) return false; const wr=wrap.getBoundingClientRect();
+    const dx=x-wr.left-pose.px, dy=y-wr.top-pose.py, c=Math.cos(pose.a), s2=Math.sin(pose.a);
+    const lx=dx*c+dy*s2, ly=-dx*s2+dy*c, pad=14;      // into the walker's own frame (feet at 0,0, up = -y)
+    return lx>-geo.w/2-pad && lx<geo.w/2+pad && ly>-geo.h-pad && ly<pad; }
+  document.addEventListener('pointerdown',e=>{ if(ready&&inside(e.clientX,e.clientY)){ e.preventDefault(); jump(); } });
+  function checkHover(){ const now=ready&&inside(mx,my);
+    if(now&&!hovering&&mode==='walk') greet(2.4);
+    if(now!==hovering){ hovering=now; wrap.style.cursor=now?'pointer':''; } }
   function frame(dt){
     if(!geo) return;
     const speed=Math.max(56,geo.W*.055); mt+=dt;
@@ -107,10 +118,11 @@
       if(mt>=T){ mode='walk'; yaw=0; if(screen) screen.material=screenMat; }
     } else if(mode==='jump'){
       const T=.8, k=Math.min(1,mt/T); hop=Math.sin(k*Math.PI)*.35; spin=ease(k)*Math.PI*2;
-      if(mt>=T){ mode='walk'; spin=0; setTimeout(()=>{ if(mode==='walk') say(false); },500); }
+      yaw*=Math.max(0,1-dt*6);   // if it was facing you, turn back while it spins
+      if(mt>=T){ mode='walk'; spin=0; yaw=0; if(screen) screen.material=screenMat; setTimeout(()=>{ if(mode==='walk') say(false); },500); }
     }
     if(walking){ s+=dt*speed; phase+=dt*speed/(geo.h*.32); }
-    const [px,py,a]=at(s); onTop=Math.abs(a)<.02;
+    const [px,py,a]=at(s); onTop=Math.abs(a)<.02; pose={px,py,a}; checkHover();
     // now and then, halfway along the top edge, stop and say hello
     const lap=Math.floor(s/geo.total), d=((s%geo.total)+geo.total)%geo.total, onMid=onTop && d>geo.L[0]*.35 && d<geo.L[0]*.65;
     // say hello often enough to be seen: soon after it appears, then every 7–12 s, and always mid-top-edge
