@@ -146,7 +146,8 @@ main,header,footer{position:relative;z-index:1}
 .p3d{position:absolute;left:-14%;top:-8%;width:128%;height:116%;opacity:0;transition:opacity .5s;touch-action:pan-y;z-index:2}
 .p3d-ready{animation:none!important;filter:none!important}
 .p3d-ready .p3d{opacity:1}
-.p3d-ready img.shell,.p3d-ready .ps{opacity:0;pointer-events:none}
+.p3d-ready img.shell{opacity:0;pointer-events:none}
+.p3d-ready .ps{left:50%;top:45%;width:4px;height:4px;border-radius:0;pointer-events:none;z-index:1}
 .p3d-swatches{position:absolute;left:50%;bottom:-10%;transform:translateX(-50%);display:flex;gap:10px;z-index:3;opacity:0;transition:opacity .5s}
 .p3d-ready .p3d-swatches{opacity:1}
 .p3d-swatches button{width:18px;height:18px;border-radius:50%;border:0;padding:0;cursor:pointer;box-shadow:0 0 0 2px rgba(255,255,255,.35),0 4px 10px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}
@@ -894,17 +895,23 @@ const LETTER_PLANES=(function letterPlanes(){
    ============================================================ */
 (function stepPlayer(){
   const v=document.getElementById('stepVideo'), btns=[...document.querySelectorAll('#steps button')]; if(!v||!btns.length) return;
-  const src=n=>`media/personal-step${n}.mp4`; let cur=1, vis=false;
+  const src=n=>`media/personal-step${n}.mp4`;
+  let cur=1, vis=false, started=false, finished=false;
   // warm the cache so switching is instant
   [2,3,4].forEach(n=>{ const l=document.createElement('link'); l.rel='prefetch'; l.as='video'; l.href=src(n); document.head.appendChild(l); });
-  function show(n,play){ cur=n; btns.forEach(b=>{ const on=+b.dataset.step===n; b.setAttribute('aria-pressed',on); if(!on) b.style.setProperty('--p',0); });
-    if(!v.src.endsWith(src(n))){ v.src=src(n); }
-    v.currentTime=0; if(play&&vis&&!REDUCED) v.play().catch(()=>{}); }
-  btns.forEach(b=>b.addEventListener('click',()=>show(+b.dataset.step,true)));
+  function mark(n){ btns.forEach(b=>{ const on=+b.dataset.step===n; b.setAttribute('aria-pressed',on); b.style.setProperty('--p',+b.dataset.step<n?1:0); }); }
+  function play(n){ cur=n; finished=false; mark(n);
+    if(!v.src.endsWith(src(n))) v.src=src(n); else v.currentTime=0;
+    if(vis&&!REDUCED) v.play().catch(()=>{}); }
+  // clicking a step jumps there, then the rest follows in order
+  btns.forEach(b=>b.addEventListener('click',()=>{ started=true; play(+b.dataset.step); }));
   v.addEventListener('timeupdate',()=>{ const b=btns[cur-1]; if(b&&v.duration) b.style.setProperty('--p',(v.currentTime/v.duration).toFixed(3)); });
-  v.addEventListener('ended',()=>show(cur%4+1,true));
-  v.muted=true;
-  watch(v,on=>{ vis=on; if(on&&!REDUCED) v.play().catch(()=>{}); else v.pause(); });
+  // 1 → 2 → 3 → 4, then stop on the last frame of step 4
+  v.addEventListener('ended',()=>{ if(cur<4) play(cur+1); else { finished=true; btns[3].style.setProperty('--p',1); } });
+  v.muted=true; v.loop=false;
+  watch(document.getElementById('egg')||v,on=>{ vis=on;
+    if(on&&!REDUCED){ if(!started){ started=true; play(1); } else if(!finished) v.play().catch(()=>{}); }
+    else v.pause(); });
 })();
 
 /* ============================================================
