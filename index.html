@@ -731,23 +731,112 @@ function watch(el, cb){ const io=new IntersectionObserver(es=>es.forEach(e=>cb(e
    Starfield (twinkling night sky, whole page)
    ============================================================ */
 (function stars(){
-  const c=document.getElementById('stars'), x=c.getContext('2d'); let W,H,S=[],G=[],d=1;
-  function init(){ d=Math.min(2,devicePixelRatio||1); W=innerWidth; H=innerHeight; c.width=W*d; c.height=H*d; x.setTransform(d,0,0,d,0,0);
+  // Stars are drawn on a 2D canvas; when WebGL is available that canvas becomes a texture and a
+  // small fluid simulation follows the cursor, so moving the mouse stirs the starlight (after
+  // lusion.co): stars swirl and smear along the wake, edges catch a faint iridescent sheen,
+  // stardust trails behind the pointer, then everything settles.
+  const dom=document.getElementById('stars');
+  let gl=null; if(!REDUCED){ try{ gl=dom.getContext('webgl',{alpha:true,premultipliedAlpha:true,antialias:false}); }catch(e){} }
+  const c=gl?document.createElement('canvas'):dom, x=c.getContext('2d'); let W,H,S=[],G=[],D=[],d=1;
+  function init(){ d=Math.min(gl?1.5:2,devicePixelRatio||1); W=innerWidth; H=innerHeight; c.width=W*d; c.height=H*d; x.setTransform(d,0,0,d,0,0);
     const n=Math.min(420,Math.round(W*H/4200)); S=[];
     for(let i=0;i<n;i++) S.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()<.9?rnd(.4,1.2):rnd(1.3,2.1),dp:rnd(.05,.5),ph:rnd(0,6.28),sp:rnd(.6,2.2)});
     G=[]; for(let i=0;i<Math.round(n/26);i++) G.push({x:Math.random()*W,y:Math.random()*H,r:rnd(14,34),dp:rnd(.1,.4),ph:rnd(0,6.28),sp:rnd(.3,.9),h:Math.random()<.5?'255,236,180':'190,205,255'});
+    if(gl) fx&&fx.resize();
   }
-  function draw(t){ x.clearRect(0,0,W,H); const sy=scrollY;
+  function draw(t,dt){ x.clearRect(0,0,W,H); const sy=scrollY;
     for(const g of G){ const y=((g.y - sy*g.dp)%H+H)%H; const a=.10+.10*Math.sin(t*.001*g.sp+g.ph);
       const gr=x.createRadialGradient(g.x,y,0,g.x,y,g.r); gr.addColorStop(0,`rgba(${g.h},${a+.25})`); gr.addColorStop(.25,`rgba(${g.h},${a})`); gr.addColorStop(1,`rgba(${g.h},0)`);
       x.fillStyle=gr; x.beginPath(); x.arc(g.x,y,g.r,0,6.283); x.fill(); }
     for(const s of S){ const y=((s.y - sy*s.dp)%H+H)%H; const a=.35+.65*Math.abs(Math.sin(t*.001*s.sp+s.ph));
       x.fillStyle=`rgba(255,255,255,${a})`; x.beginPath(); x.arc(s.x,y,s.r,0,6.283); x.fill();
       if(s.r>1.3){ x.strokeStyle=`rgba(255,255,255,${a*.5})`; x.lineWidth=.8; x.beginPath(); x.moveTo(s.x-s.r*3,y); x.lineTo(s.x+s.r*3,y); x.moveTo(s.x,y-s.r*3); x.lineTo(s.x,y+s.r*3); x.stroke(); } }
+    // stardust left behind the cursor
+    for(const p of D){ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vx*=.96; p.vy*=.96; p.life-=dt; const a=Math.max(0,p.life/p.max);
+      x.fillStyle=`rgba(${p.c},${a})`; x.beginPath(); x.arc(p.x,p.y,p.r*(.5+a*.5),0,6.283); x.fill();
+      if(p.r>1.1){ x.strokeStyle=`rgba(${p.c},${a*.6})`; x.lineWidth=.7; x.beginPath(); x.moveTo(p.x-p.r*3,p.y); x.lineTo(p.x+p.r*3,p.y); x.moveTo(p.x,p.y-p.r*3); x.lineTo(p.x,p.y+p.r*3); x.stroke(); } }
+    D=D.filter(p=>p.life>0);
   }
+  // pointer
+  let mx=-1, my=-1, pmx=-1, pmy=-1, lx=-1, ly=-1, fdx=0, fdy=0;
+  addEventListener('pointermove',e=>{ if(mx<0){ pmx=e.clientX; pmy=e.clientY; } mx=e.clientX; my=e.clientY; fdx+=mx-pmx; fdy+=my-pmy;
+    const sp=Math.hypot(mx-pmx,my-pmy); if(!REDUCED && sp>2 && D.length<160){ const n=Math.min(3,1+Math.floor(sp/18));
+      for(let k=0;k<n;k++){ const t=Math.random(); D.push({x:pmx+(mx-pmx)*t+rnd(-4,4),y:pmy+(my-pmy)*t+rnd(-4,4),vx:rnd(-20,20)+(mx-pmx)*.6,vy:rnd(-20,20)+(my-pmy)*.6,r:Math.random()<.2?rnd(1.2,1.8):rnd(.5,1.1),life:0,max:0,c:Math.random()<.3?'255,232,180':(Math.random()<.5?'200,210,255':'255,255,255')}); const L=rnd(.6,1.4); D[D.length-1].life=L; D[D.length-1].max=L; } }
+    pmx=mx; pmy=my; },{passive:true});
+
+  // ---------- WebGL starlight fluid ----------
+  let fx=null;
+  if(gl){ try{ fx=(function(){
+    const VS='attribute vec2 p;varying vec2 uv;void main(){uv=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
+    const SIM=`precision highp float;varying vec2 uv;uniform sampler2D vel;uniform vec2 texel,p0,p1,force;uniform float radius,aspect,dt,decay;
+      vec2 dec(vec4 c){return c.xy*2.-1.;}
+      void main(){ vec2 v=dec(texture2D(vel,uv)); vec2 back=uv-v*dt*.45;
+        vec2 a=dec(texture2D(vel,back));
+        vec2 n=(dec(texture2D(vel,back+vec2(texel.x,0.)))+dec(texture2D(vel,back-vec2(texel.x,0.)))+dec(texture2D(vel,back+vec2(0.,texel.y)))+dec(texture2D(vel,back-vec2(0.,texel.y))))*.25;
+        a=mix(a,n,.3)*decay;
+        a-=sign(a)*min(abs(a),vec2(.006));
+        vec2 q=uv-p0, e=p1-p0; q.x*=aspect; e.x*=aspect; float h=clamp(dot(q,e)/max(dot(e,e),1e-6),0.,1.); vec2 d=q-e*h; a+=force*exp(-dot(d,d)/radius);
+        // a gentle curl so the wake swirls instead of just smearing
+        a+=vec2(-a.y,a.x)*.035;
+        gl_FragColor=vec4(clamp(a,-1.,1.)*.5+.5,0.,1.); }`;
+    const SHOW=`precision highp float;varying vec2 uv;uniform sampler2D stars,vel;uniform vec2 mouse;uniform float aspect,time;
+      vec2 dec(vec4 c){return c.xy*2.-1.;}
+      void main(){ vec2 v=dec(texture2D(vel,uv)); float m=length(v); vec2 off=v*.07;
+        vec4 cr=texture2D(stars,uv-off*.9), cg=texture2D(stars,uv-off*1.05), cb=texture2D(stars,uv-off*1.22);
+        vec4 col=vec4(cr.r,cg.g,cb.b,max(cr.a,max(cg.a,cb.a)));
+        float s=smoothstep(.04,.55,m);
+        float h=atan(v.y,v.x)/6.2831+time*.04+uv.x*.35+uv.y*.2;
+        vec3 iri=.5+.5*cos(6.2831*(h+vec3(0.,.33,.67)));
+        vec3 sheen=mix(vec3(.72,.78,1.),iri,.55)*s*s*.16;
+        vec2 dm=uv-mouse; dm.x*=aspect; float glow=exp(-dot(dm,dm)/.006);
+        col.rgb*=1.+glow*1.1+s*1.6;
+        col.rgb+=sheen;
+        gl_FragColor=vec4(col.rgb,clamp(col.a+dot(sheen,vec3(.6)),0.,1.)); }`;
+    function sh(t,src){ const o=gl.createShader(t); gl.shaderSource(o,src); gl.compileShader(o); if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; }
+    function prog(fs){ const p=gl.createProgram(); gl.attachShader(p,sh(gl.VERTEX_SHADER,VS)); gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs)); gl.bindAttribLocation(p,0,'p'); gl.linkProgram(p); if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw gl.getProgramInfoLog(p);
+      const u={}; const n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS); for(let i=0;i<n;i++){ const a=gl.getActiveUniform(p,i); u[a.name]=gl.getUniformLocation(p,a.name); } return {p,u}; }
+    const sim=prog(SIM), show=prog(SHOW);
+    const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+    function tex(w,h,data){ const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,data||null); return t; }
+    let SW=1,SH=1,A,B,FA,FB; const starTex=tex(1,1);
+    function fb(t){ const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,f); gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0); return f; }
+    function resize(){ dom.width=Math.round(W*d); dom.height=Math.round(H*d);
+      SW=160; SH=Math.max(60,Math.round(160*H/W)); const z=new Uint8Array(SW*SH*4); for(let i=0;i<z.length;i+=4){ z[i]=z[i+1]=128; z[i+3]=255; }
+      if(A){ gl.deleteTexture(A); gl.deleteTexture(B); gl.deleteFramebuffer(FA); gl.deleteFramebuffer(FB); }
+      [A,B]=[tex(SW,SH,z),tex(SW,SH,z)]; FA=fb(A); FB=fb(B); gl.bindFramebuffer(gl.FRAMEBUFFER,null); }
+    let time=0;
+    function frame(dt){
+      time+=dt;
+      // upload the drawn stars
+      gl.bindTexture(gl.TEXTURE_2D,starTex); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+      // step the fluid
+      const asp=W/H, k=22;
+      gl.useProgram(sim.p); gl.bindFramebuffer(gl.FRAMEBUFFER,FB); gl.viewport(0,0,SW,SH);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,A); gl.uniform1i(sim.u.vel,0);
+      gl.uniform2f(sim.u.texel,1/SW,1/SH); gl.uniform2f(sim.u.p0,lx<0?-9:lx/W,lx<0?-9:1-ly/H); gl.uniform2f(sim.u.p1,mx<0?-9:mx/W,mx<0?-9:1-my/H); lx=mx; ly=my;
+      gl.uniform2f(sim.u.force,Math.max(-1,Math.min(1,fdx/W*k)),Math.max(-1,Math.min(1,-fdy/H*k)));
+      gl.uniform1f(sim.u.radius,.0022); gl.uniform1f(sim.u.aspect,asp); gl.uniform1f(sim.u.dt,dt); gl.uniform1f(sim.u.decay,Math.pow(.962,dt*60));
+      gl.drawArrays(gl.TRIANGLE_STRIP,0,4); fdx=fdy=0; [A,B]=[B,A]; [FA,FB]=[FB,FA];
+      // draw stars through the fluid
+      gl.useProgram(show.p); gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,dom.width,dom.height);
+      gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,starTex); gl.uniform1i(show.u.stars,0);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,A); gl.uniform1i(show.u.vel,1);
+      gl.uniform2f(show.u.mouse,mx<0?-9:mx/W,mx<0?-9:1-my/H); gl.uniform1f(show.u.aspect,asp); gl.uniform1f(show.u.time,time);
+      gl.drawArrays(gl.TRIANGLE_STRIP,0,4); gl.activeTexture(gl.TEXTURE0);
+    }
+    return {resize,frame};
+  })(); }catch(e){ console.warn('starlight fluid off',e); fx=null; } }
+  if(gl && !fx){ // WebGL failed: show the plain 2D starfield instead
+    c.id='stars'; c.setAttribute('aria-hidden','true'); dom.replaceWith(c); gl=null; }
+
   init(); addEventListener('resize',init);
-  if(REDUCED){ draw(0); addEventListener('scroll',()=>draw(0),{passive:true}); return; }
-  (function loop(t){ draw(t); requestAnimationFrame(loop); })(0);
+  if(REDUCED){ draw(0,0); addEventListener('scroll',()=>draw(0,0),{passive:true}); return; }
+  let last=0; (function loop(t){ const dt=Math.min(.05,(t-(last||t))/1000)||.016; last=t; draw(t,dt); if(fx) fx.frame(dt); requestAnimationFrame(loop); })(0);
 })();
 
 /* nav */
