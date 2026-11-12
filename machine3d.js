@@ -106,7 +106,8 @@
   }
 
   // ---------- load ----------
-  const interact={}, hoverables=[];
+  const interact={}, hoverables=[]; let cat=null;
+  function pokeCat(){ if(!cat) return; lastInteract=performance.now(); hint.classList.add('gone'); if(cat.state==='hidden'||cat.state==='down'){ cat.state='rise'; cat.t=0; } else { cat.vj=2.2; cat.state='peek'; cat.t=0; cat.blinkT=.18; } for(let k=0;k<3;k++) note(20+k*55,40,'#ffd2a8'); }
   const onModel=gltf=>{
     model=gltf.scene;
     ['Backdrop','CamTarget'].forEach(n=>{ const o=model.getObjectByName(n); if(o) o.parent.remove(o); });
@@ -159,6 +160,7 @@
     const tray=byPrefix('Tray_'); if(tray.length) interact.tray={objs:tray,center:centerOf(tray)};
     const spout=byName('Spout_Rim'); interact.spout=spout?centerOf([spout]):null;
 
+    const boxParts=byPrefix('CatBox_'); if(boxParts.length) interact.cat={objs:boxParts};
     for(const [k,o] of Object.entries(interact)) if(o&&o.objs) o.objs.forEach(m=>{ m.userData.part=k; hoverables.push(m); });
     model.traverse(o=>{ if(o.isMesh && !o.userData.part){ o.userData.part='body'; hoverables.push(o);} });
 
@@ -166,8 +168,19 @@
     const fb=new THREE.Box3().setFromObject(bob); const fs=fb.getSize(new THREE.Vector3()), fc=fb.getCenter(new THREE.Vector3());
     camera.userData.target=fc; camera.userData.dist=Math.max(fs.y,fs.x*1.15)/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)))*1.12;
     root.rotation.y=-.42; baseYaw=-.42;
+    // cat living in the cardboard box: peeks out, looks around, blinks, ducks back
+    if(boxParts.length){ const bb=new THREE.Box3(); boxParts.forEach(o=>bb.expandByObject(o)); const sz=bb.getSize(new THREE.Vector3()), cc=bb.getCenter(new THREE.Vector3());
+      const tl=new THREE.TextureLoader(), base=host.dataset.assets||'assets/';
+      const texOpen=tl.load(base+'cat.webp'), texBlink=tl.load(base+'cat-blink.webp'); [texOpen,texBlink].forEach(t=>{ t.encoding=THREE.sRGBEncoding; t.anisotropy=4; });
+      renderer.localClippingEnabled=true; const clip=new THREE.Plane(V(0,1,0),0);
+      const mat=new THREE.SpriteMaterial({map:texOpen,transparent:true,alphaTest:.04,toneMapped:false,clippingPlanes:[clip]});
+      const spr=new THREE.Sprite(mat); spr.center.set(.5,0); const h=Math.min(sz.x,sz.z)*1.2; spr.scale.set(h*640/608,h,1);
+      const local=model.worldToLocal(cc.clone()); const rimY=model.worldToLocal(V(0,bb.max.y,0)).y;
+      spr.position.set(local.x,rimY-h,local.z+sz.z*.05); spr.visible=false; spr.userData.part='cat'; model.add(spr); hoverables.push(spr);
+      const floorL=model.worldToLocal(V(cc.x,bb.min.y+sz.y*.04,cc.z));
+      cat={spr,mat,clip,floorL,texOpen,texBlink,h,rimY,state:'hidden',t:0,wait:1.2,up:0,jump:0,vj:0,blinkT:0,nextBlink:.8,tilt:0}; }
     ready=true; resize(); host.classList.add('m3d-ready'); screenDraw(); render();
-    window.__m3d={interact,root,camera,S,toScreen,parts:Object.keys(interact),pickAt:(x,y)=>pick({clientX:x,clientY:y})};
+    window.__m3d={get cat(){return cat},interact,root,camera,S,toScreen,parts:Object.keys(interact),pickAt:(x,y)=>pick({clientX:x,clientY:y})};
     if(window.__m3dReady) window.__m3dReady();
   };
   const onErr=err=>console.warn('machine model failed',err);
@@ -197,6 +210,7 @@
     canvas.setPointerCapture(e.pointerId); drag={part:p||'body',x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,moved:0};
     if(p&&p.startsWith('b')&&interact[p]) press(p,true);
     if(p==='tray') act('seed');
+    if(p==='cat') pokeCat();
     if(p==='valve'){ const c=toScreen(interact.valve.centerW.clone().applyMatrix4(root.matrixWorld)); drag.cx=c.x; drag.cy=c.y; drag.a=Math.atan2(e.clientY-c.y,e.clientX-c.x); }
     if(p==='body'||p===null){ canvas.style.cursor='grabbing'; }
   });
@@ -233,6 +247,19 @@
         if(b.down&&b.kind==='heat') S.heat=Math.min(1.4,S.heat+dt*1.2); }
       const sl=interact.slider; if(sl) sl.pivot.position.copy(sl.home).addScaledVector(sl.axis,sl.s-sl.s0);
       const su=interact.sun; if(su){ su.spin+=dt*(.3+S.sun*4); su.pivot.quaternion.setFromAxisAngle(su.axis,su.spin); su.objs.forEach(m=>m.material.emissive&&m.material.emissive.setRGB(S.sun*.9,S.sun*.65,S.sun*.1)); }
+      if(cat){ const c=cat; c.t+=dt;
+        if(c.state==='hidden'){ c.spr.visible=false; if(c.t>c.wait){ c.state='rise'; c.t=0; } }
+        else if(c.state==='rise'){ c.up=Math.min(1,c.t/.7); if(c.up>=1){ c.state='peek'; c.t=0; } }
+        else if(c.state==='peek'){ c.up=1; if(c.t>4.2&&!REDUCED){ c.state='down'; c.t=0; } }
+        else if(c.state==='down'){ c.up=Math.max(0,1-c.t/.55); if(c.up<=0){ c.state='hidden'; c.t=0; c.wait=1.4+Math.random()*2.2; } }
+        if(c.state!=='hidden'){ c.spr.visible=true; c.clip.constant=-model.localToWorld(c.floorL.clone()).y; const e=c.up<1?1-Math.pow(1-c.up,3):1;
+          c.vj+=(-80*c.jump-8*c.vj)*dt; c.jump+=c.vj*dt;
+          const peekH=c.h*.5; c.spr.position.y=c.rimY-c.h+e*peekH+Math.max(0,c.jump)*c.h*.12+(c.state==='peek'?Math.sin(c.t*3)*c.h*.01:0);
+          // look around: lean left/right while peeking
+          const look=c.state==='peek'?Math.sin(c.t*1.6)*.12:0; c.tilt+=(look-c.tilt)*Math.min(1,dt*5); c.mat.rotation=c.tilt;
+          // blink every couple of seconds (sometimes twice)
+          c.nextBlink-=dt; if(c.nextBlink<=0&&c.state==='peek'){ c.blinkT=.16; c.nextBlink=1.2+Math.random()*2.2; if(Math.random()<.3) c.nextBlink=.32; }
+          if(c.blinkT>0){ c.blinkT-=dt; } const want=c.blinkT>0?c.texBlink:c.texOpen; if(c.mat.map!==want){ c.mat.map=want; c.mat.needsUpdate=true; } } }
       const j=interact.joy; if(j){ if(!drag||drag.part!=='joy'){ j.vx+=(-90*j.tx-9*j.vx)*dt; j.tx+=j.vx*dt; j.vz+=(-90*j.tz-9*j.vz)*dt; j.tz+=j.vz*dt; } j.pivot.rotation.set(j.tx,0,j.tz); }
       // water drops from the spout while the valve turns
       if(interact.spout && S.water>.15 && Math.random()<S.water*.6){ const m=new THREE.Mesh(dropGeo,dropMat); const p=interact.spout.clone(); m.position.copy(bob.worldToLocal(p.applyMatrix4(root.matrixWorld))); m.userData.v=0; bob.add(m); drops.push(m); }

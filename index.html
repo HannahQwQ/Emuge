@@ -39,7 +39,7 @@ main,header,footer{position:relative;z-index:1}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:.02em;padding:6px 14px;border-radius:999px;transition:background .35s,color .35s}
 .brand-dots{display:flex;gap:3px}
 .brand-dots i{width:9px;height:9px;border-radius:50%;display:block}
-.nav-links{display:flex;gap:28px;list-style:none;margin:0;padding:0;font-weight:500;font-size:15px;transition:opacity .3s,transform .3s}
+.nav-links{display:flex;gap:36px;list-style:none;margin:0;padding:0;font-weight:600;font-size:18px;letter-spacing:.02em;transition:opacity .3s,transform .3s}
 .nav-links a{text-decoration:none;opacity:.9}
 .nav-links a:hover{opacity:1;text-decoration:underline;text-underline-offset:6px}
 .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 18px;font-weight:700;font-size:15px;text-decoration:none;border:0;cursor:pointer;font-family:var(--f-body);transition:transform .2s,box-shadow .2s,background .2s}
@@ -63,7 +63,7 @@ main,header,footer{position:relative;z-index:1}
 .lt svg{width:100%;height:100%;display:block;overflow:visible}
 .hero-stage.on-letter{cursor:pointer}
 .letters .deco{transform-box:fill-box;transform-origin:50% 50%}
-.hero-machine{position:absolute;left:46%;top:0;width:38%;aspect-ratio:802/900;z-index:3;user-select:none;-webkit-user-select:none}
+.hero-machine{position:absolute;left:42.5%;top:-3%;width:44%;aspect-ratio:802/900;z-index:3;user-select:none;-webkit-user-select:none}
 .hero-machine .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 30px 40px rgba(0,0,0,.45));transition:opacity .6s}
 .hero-machine::after{content:"";position:absolute;left:18%;right:18%;bottom:3%;height:6%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.45),transparent);z-index:-1}
 .m3d{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .6s;touch-action:pan-y}
@@ -96,7 +96,7 @@ main,header,footer{position:relative;z-index:1}
   .hero{padding-top:72px}
   .hero-stage{aspect-ratio:auto}
   .letters-wrap{position:relative;aspect-ratio:1749/1358}
-  .hero-machine{left:40%;top:1vw;width:56%}
+  .hero-machine{left:36%;top:0;width:64%}
   .m3d-hint{font-size:11px}
   .hero-copy,.hero-sub,.hero-tag{position:static;width:auto}
   .hero-text{padding:8px var(--gutter-r) 0 var(--gutter-l);display:grid;gap:16px}
@@ -246,7 +246,6 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
       <li><a href="#demo">演示</a></li>
       <li><a href="#team">团队</a></li>
     </ul>
-    <a class="pill pill-light js-proto" href="#" target="_blank" rel="noopener">体验原型 ↗</a>
   </div>
 </header>
 
@@ -805,7 +804,7 @@ const LETTER_PLANES=(function letterPlanes(){
     if(k>=0){ const hr=document.createRange(); hr.setStart(tn,k); hr.setEnd(tn,k+4); hear=hr.getBoundingClientRect(); }
     for(const r of rows){
       const el=document.createElementNS(NS,'svg'); el.setAttribute('class','uline'); el.style.fontSize=fs+'px';
-      const w=r.right-r.left, h=fs*.7, mid=r.bottom-wr.top-fs*.12+fs*.0375;
+      const w=r.right-r.left, h=fs*.7, mid=r.bottom-wr.top-fs*.24;
       el.style.left=(r.left-wr.left)+'px'; el.style.width=w+'px'; el.style.top=(mid-h/2)+'px';
       el.setAttribute('viewBox',`0 0 ${w} ${h}`); el.setAttribute('aria-hidden','true');
       const path=document.createElementNS(NS,'path'); path.setAttribute('stroke-width',(fs*.075).toFixed(2)); el.appendChild(path); wrap.appendChild(el);

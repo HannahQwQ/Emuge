@@ -40,7 +40,8 @@ python3 -m http.server 8000
 - **公共装置录屏**：`CONFIG.links.publicScreenVideo`。
 - **首页大字母**：五个字母的 SVG 直接写在 `index.html` 里（搜索 `class="letter"`），倾斜效果在脚本 `letterPlanes` 一段。
 - **标题划线 / 琴弦效果**：脚本 `titleUnderline` 一段（振幅 `A=l.fs*.22`，衰减 `Math.exp(-t*3.2)`）。
-- **3D 装置交互**：`machine3d.js`，零件按 GLB 里的节点名查找（`Valve_*`、`Slider_Knob`、`Button0-2`、`Joystick_*`、`Tray_*`、`Screen`）。
+- **3D 装置交互**：`machine3d.js`，零件按 GLB 里的节点名查找（`Valve_*`、`Slider_Knob`、`Button0-2`、`Joystick_*`、`Tray_*`、`Screen`、`CatBox_*`）。
+- **箱子里的小猫**：贴图是 `assets/cat.webp`（睁眼）和 `assets/cat-blink.webp`（闭眼），动画在 `machine3d.js` 里搜索 `cat living in the cardboard box`。
 
 ## 外部依赖（CDN）
 
