@@ -179,11 +179,11 @@
       spr.position.set(local.x,rimY-h,local.z); spr.visible=false; spr.userData.part='cat'; model.add(spr); hoverables.push(spr);
       const floorL=model.worldToLocal(V(cc.x,bb.min.y+sz.y*.04,cc.z));
       cat={spr,mat,clip,floorL,texOpen,texBlink,h,rimY,state:'hidden',t:0,wait:1.2,up:0,jump:0,vj:0,blinkT:0,nextBlink:.8,tilt:0}; }
-    ready=true; resize(); host.classList.add('m3d-ready'); screenDraw(); render();
+    ready=true; resize(); host.classList.add('m3d-ready'); window.__heroReady=true; window.dispatchEvent(new Event('emuge:hero-ready')); screenDraw(); render();
     window.__m3d={get cat(){return cat},interact,root,camera,S,toScreen,parts:Object.keys(interact),pickAt:(x,y)=>pick({clientX:x,clientY:y})};
     if(window.__m3dReady) window.__m3dReady();
   };
-  const onErr=err=>console.warn('machine model failed',err);
+  const onErr=err=>{ console.warn('machine model failed',err); window.__heroReady=true; window.dispatchEvent(new Event('emuge:hero-ready')); };
   if(window.EMUGE_GLB_B64){ const bin=atob(window.EMUGE_GLB_B64), buf=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i); new THREE.GLTFLoader().parse(buf.buffer,'',onModel,onErr); }
   else new THREE.GLTFLoader().load(host.dataset.model||'media/emuge-machine.glb',onModel,undefined,onErr);
 

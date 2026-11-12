@@ -58,7 +58,9 @@
 
   // ---- model ----
   let devices={}, current=null, ready=false;
-  new THREE.GLTFLoader().load(host.dataset.model||'media/personal-device.glb',gltf=>{
+  // load after the first-page model so it gets the bandwidth first
+  const afterHero=fn=>{ let done=false; const go=()=>{ if(!done){ done=true; fn(); } }; if(window.__heroReady) go(); else { addEventListener('emuge:hero-ready',go,{once:true}); setTimeout(go,8000); } };
+  afterHero(()=>new THREE.GLTFLoader().load(host.dataset.model||'media/personal-device.glb',gltf=>{
     const root=gltf.scene;
     ['Backdrop','Target','Key_Top_target','Fill_Front_target','Strip_Left_target','Strip_Right_target'].forEach(n=>{ const o=root.getObjectByName(n); if(o&&o.parent) o.parent.remove(o); });
     COLORS.forEach(([k])=>{ const d=root.getObjectByName('Device_'+k); if(d) devices[k]=d; });
@@ -79,7 +81,7 @@
     const b=new THREE.Box3().setFromObject(devices.cabbage||Object.values(devices)[0]), s=b.getSize(new THREE.Vector3());
     camera.userData.size=Math.max(s.x,s.y); ready=true; resize(); host.classList.add('p3d-ready');
     window.__p3d={pivot,camera,devices,SC};
-  },undefined,e=>console.warn('personal device model failed',e));
+  },undefined,e=>console.warn('personal device model failed',e)));
 
   function show(k){ if(!devices[k]) return; Object.values(devices).forEach(d=>d.visible=false); const d=devices[k];
     d.visible=true; d.position.set(0,0,0); d.updateMatrixWorld(true); const b=new THREE.Box3().setFromObject(d), c=b.getCenter(new THREE.Vector3()); d.position.sub(c); current=k;

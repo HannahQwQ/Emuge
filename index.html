@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Emuge</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preload" href="media/emuge-machine.glb" as="fetch" type="model/gltf-binary" crossorigin="anonymous" fetchpriority="high">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js" as="script" fetchpriority="high">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js" as="script">
+<link rel="preload" href="machine3d.js" as="script">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
@@ -181,7 +185,10 @@ main,header,footer{position:relative;z-index:1}
 
 .walker{position:absolute;left:0;top:0;z-index:5;pointer-events:none;will-change:transform;transform-origin:50% 100%;opacity:0;transition:opacity .5s}
 .walker.ready{opacity:1}
-.walker canvas{display:block;width:100%;height:100%}
+.walker canvas{display:block;width:100%;height:100%;pointer-events:auto;cursor:pointer}
+.walker-bubble{position:absolute;left:50%;bottom:calc(100% - 4px);transform:translate(-50%,6px) scale(.8);transform-origin:50% 100%;white-space:nowrap;background:var(--ink);color:#191A3A;font-size:13px;font-weight:700;padding:5px 11px;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,.25);opacity:0;transition:opacity .25s,transform .3s cubic-bezier(.3,1.6,.5,1);pointer-events:none}
+.walker-bubble::after{content:"";position:absolute;left:50%;top:100%;margin-left:-5px;border:5px solid transparent;border-top-color:var(--ink)}
+.walker-bubble.show{opacity:1;transform:translate(-50%,0) scale(1)}
 
 /* demo */
 .media.demo{background:linear-gradient(160deg,#173826 0%,#2E6B45 50%,#6BDE8A 100%);display:grid;place-items:center;padding:clamp(14px,3vw,40px)}
@@ -565,7 +572,7 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
         <div class="media personal" id="personalMedia">
           <div class="egg" id="egg" data-model="media/personal-device.glb">
             <img class="shell" src="assets/egg-green.webp" alt="蛋形个人装置" width="427" height="520">
-            <div class="ps"><video id="stepVideo" src="media/personal-step1.mp4" muted playsinline preload="auto" aria-label="个人装置屏幕录屏，按步骤播放"></video></div>
+            <div class="ps"><video id="stepVideo" src="media/personal-step1.mp4" muted playsinline preload="none" aria-label="个人装置屏幕录屏，按步骤播放"></video></div>
           </div>
         </div>
         <div class="text">
@@ -639,6 +646,9 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="machine3d.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script>
@@ -868,7 +878,8 @@ const LETTER_PLANES=(function letterPlanes(){
   const src=n=>`media/personal-step${n}.mp4`;
   let cur=1, vis=false, started=false, finished=false;
   // warm the cache so switching is instant
-  [2,3,4].forEach(n=>{ const l=document.createElement('link'); l.rel='prefetch'; l.as='video'; l.href=src(n); document.head.appendChild(l); });
+  const warm=()=>{ v.preload='auto'; [2,3,4].forEach(n=>{ const l=document.createElement('link'); l.rel='prefetch'; l.as='video'; l.href=src(n); document.head.appendChild(l); }); };
+  if(window.__heroReady) warm(); else { addEventListener('emuge:hero-ready',warm,{once:true}); setTimeout(warm,8000); }
   function mark(n){ btns.forEach(b=>{ const on=+b.dataset.step===n; b.setAttribute('aria-pressed',on); b.style.setProperty('--p',+b.dataset.step<n?1:0); }); }
   function play(n){ cur=n; finished=false; mark(n);
     if(!v.src.endsWith(src(n))) v.src=src(n); else v.currentTime=0;
@@ -972,10 +983,7 @@ if(window.gsap && window.ScrollTrigger && !REDUCED){
   gsap.from('.team-head > *',{y:40,opacity:0,stagger:.12,duration:.9,ease:'power3.out',scrollTrigger:{trigger:'.team-head',start:'top 85%'}});
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
-<script src="machine3d.js"></script>
 <script src="personal3d.js"></script>
 <script src="walker3d.js"></script>
 </body>
