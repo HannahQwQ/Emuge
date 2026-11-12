@@ -120,12 +120,16 @@ main,header,footer{position:relative;z-index:1}
 .text p{margin:0 0 14px;font-size:clamp(15px,1.2vw,18px);max-width:34em}
 .text .small{font-size:14px;color:var(--muted)}
 .steps{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:18px 0 22px;counter-reset:s}
-.steps li{counter-increment:s;font-size:13px;font-weight:700;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px var(--line)}
-.steps li::before{content:counter(s);display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#191A3A;font-size:11px;margin-right:6px}
-.steps li.on{background:var(--cabbage);color:#173016;box-shadow:none}
+.steps li{counter-increment:s}
+.steps button{display:inline-flex;align-items:center;font:inherit;font-size:13px;font-weight:700;color:var(--ink);padding:6px 12px 6px 6px;border:0;border-radius:999px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px var(--line);cursor:pointer;position:relative;overflow:hidden;transition:background .25s,color .25s,transform .2s}
+.steps button:hover{background:rgba(255,255,255,.18);transform:translateY(-1px)}
+.steps button[aria-pressed="true"]{background:var(--cabbage);color:#173016;box-shadow:none}
+.steps button::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:calc(var(--p,0)*100%);background:rgba(23,48,22,.45)}
+.steps button[aria-pressed="false"]::after{display:none}
+.steps button::before{content:counter(s);display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#191A3A;font-size:11px;margin-right:6px}
 .actions{display:flex;flex-wrap:wrap;gap:12px}
 @media (max-width:860px){
-  .feature .garden{margin-top:0;height:150px}
+  .feature .garden{margin-top:0;height:120px}
   .floaty[data-par="70"]{display:none}
   .card,.card.flip{grid-template-columns:1fr}
   .card.flip .media{order:0}
@@ -136,16 +140,16 @@ main,header,footer{position:relative;z-index:1}
 .media.personal{background:radial-gradient(120% 90% at 30% 10%,#3B2C74 0,#2A2357 45%,transparent 70%),linear-gradient(160deg,#2A2357 0%,#5B3E8C 55%,#E28FB4 100%)}
 .phone{position:absolute;left:9%;top:7%;height:86%;aspect-ratio:600/1298;border-radius:clamp(16px,2.4vw,34px);overflow:hidden;background:#F4F6FB;box-shadow:0 0 0 clamp(4px,.55vw,8px) #15162B,0 30px 60px rgba(10,8,40,.5)}
 .phone video{width:100%;height:100%;object-fit:cover;display:block}
-.egg{position:absolute;right:6%;top:12%;width:min(50%,380px);aspect-ratio:427/520;filter:drop-shadow(0 30px 40px rgba(10,8,40,.55));animation:eggfloat 7s ease-in-out infinite}
+.egg{position:absolute;left:calc(50% - min(28%,210px));top:7%;width:min(56%,420px);aspect-ratio:427/520;filter:drop-shadow(0 30px 40px rgba(10,8,40,.55));animation:eggfloat 7s ease-in-out infinite}
 @keyframes eggfloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
 .egg img.shell{position:absolute;inset:0;width:100%;height:100%}
 .ps{position:absolute;left:14.2%;top:8.2%;width:72.6%;height:57.4%;border-radius:50% 50% 46% 46% / 64% 64% 36% 36%;overflow:hidden;background:#141518}
-.ps video{position:absolute;left:50%;top:50%;width:112%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;object-fit:cover}
+.ps video{position:absolute;left:50%;top:50%;width:103%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;object-fit:cover}
 .ps::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.14) 0,transparent 30%);pointer-events:none}
 
 /* seeds garden (outside the personal card) */
-.garden{position:relative;height:clamp(150px,15vw,200px);margin-top:-160px;pointer-events:none;z-index:3}
-.plot{position:absolute;bottom:0;width:clamp(56px,8vw,120px);transform:translateX(-50%)}
+.garden{position:relative;height:clamp(110px,11vw,150px);margin-top:-118px;pointer-events:none;z-index:3}
+.plot{position:absolute;bottom:0;width:clamp(38px,5.4vw,80px);transform:translateX(-50%)}
 .plot .mound{position:absolute;left:-8%;right:-8%;bottom:0;height:clamp(16px,2vw,28px);border-radius:50% 50% 0 0/100% 100% 0 0;background:radial-gradient(60% 120% at 50% 0,#8A6A48,#5A4128);box-shadow:inset 0 3px 0 rgba(255,255,255,.12)}
 .plot .egg-seed{position:absolute;left:50%;bottom:clamp(8px,1vw,14px);width:46%;transform:translate(-50%,0);opacity:0}
 .plot .stem{position:absolute;left:50%;bottom:clamp(10px,1.2vw,18px);width:4px;margin-left:-2px;height:0;border-radius:3px;background:linear-gradient(#7DB55A,#4C8A3A);transform-origin:50% 100%}
@@ -566,17 +570,16 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
       <div class="floaty" style="left:0;bottom:24%;width:clamp(56px,6vw,96px)" data-par="70"><img src="assets/v-eggplant-6.webp" alt=""></div>
       <div class="card reveal">
         <div class="media personal" id="personalMedia">
-          <div class="phone"><video class="rec" src="media/personal-app.mp4" muted loop playsinline preload="metadata" aria-label="个人装置 App 录屏：拖动情绪轮盘、选择特殊状态、种进校园地图"></video></div>
           <div class="egg" id="egg">
             <img class="shell" src="assets/egg-green.webp" alt="蛋形个人装置" width="427" height="520">
-            <div class="ps"><video class="rec" src="media/personal-wheel.mp4" muted loop playsinline preload="metadata" aria-label="装置屏幕：情绪轮盘录屏"></video></div>
+            <div class="ps"><video id="stepVideo" src="media/personal-step1.mp4" muted playsinline preload="auto" aria-label="个人装置屏幕录屏，按步骤播放"></video></div>
           </div>
         </div>
         <div class="text">
           <div class="eyebrow" style="color:var(--cabbage)"><i></i>个人装置 · Personal device</div>
           <h2 id="p-title">Plant how you feel.</h2>
           <p>对着装置做个表情，在情绪轮盘上拖动，找到最贴近此刻的那颗蔬菜，选中后会自动试听它的声音。还可以叠加一个特殊状态，最后把它种进校园地图。</p>
-          <ol class="steps"><li>读表情</li><li>拖轮盘选蔬菜</li><li>加特殊状态</li><li>种进校园地图</li></ol>
+          <ol class="steps" id="steps"><li><button type="button" data-step="1" aria-pressed="true">读表情</button></li><li><button type="button" data-step="2" aria-pressed="false">拖轮盘选蔬菜</button></li><li><button type="button" data-step="3" aria-pressed="false">加特殊状态</button></li><li><button type="button" data-step="4" aria-pressed="false">种进校园地图</button></li></ol>
           <p class="small">表情识别在手机本地完成，画面只在内存里停留约 6 秒，不录制、不上传。</p>
           <div class="actions"><a class="pill pill-ghost js-repo" href="#" target="_blank" rel="noopener">查看个人装置源码 ↗</a></div>
         </div>
@@ -877,19 +880,38 @@ const LETTER_PLANES=(function letterPlanes(){
 })();
 
 /* ============================================================
+   Personal device: four recorded segments, one per step chip.
+   Click a chip to play its segment; segments chain 1→2→3→4→1.
+   ============================================================ */
+(function stepPlayer(){
+  const v=document.getElementById('stepVideo'), btns=[...document.querySelectorAll('#steps button')]; if(!v||!btns.length) return;
+  const src=n=>`media/personal-step${n}.mp4`; let cur=1, vis=false;
+  // warm the cache so switching is instant
+  [2,3,4].forEach(n=>{ const l=document.createElement('link'); l.rel='prefetch'; l.as='video'; l.href=src(n); document.head.appendChild(l); });
+  function show(n,play){ cur=n; btns.forEach(b=>{ const on=+b.dataset.step===n; b.setAttribute('aria-pressed',on); if(!on) b.style.setProperty('--p',0); });
+    if(!v.src.endsWith(src(n))){ v.src=src(n); }
+    v.currentTime=0; if(play&&vis&&!REDUCED) v.play().catch(()=>{}); }
+  btns.forEach(b=>b.addEventListener('click',()=>show(+b.dataset.step,true)));
+  v.addEventListener('timeupdate',()=>{ const b=btns[cur-1]; if(b&&v.duration) b.style.setProperty('--p',(v.currentTime/v.duration).toFixed(3)); });
+  v.addEventListener('ended',()=>show(cur%4+1,true));
+  v.muted=true;
+  watch(v,on=>{ vis=on; if(on&&!REDUCED) v.play().catch(()=>{}); else v.pause(); });
+})();
+
+/* ============================================================
    Seeds garden — the five coloured devices fall like seeds,
    sprout, and grow a vegetable that sways (PvZ style)
    ============================================================ */
 (function garden(){
   const g=document.getElementById('garden');
   const SEEDS=[['white','mushroom',2],['yellow','corn',4],['purple','eggplant',3],['green','cabbage',6],['pink','chili',8]];
-  const pos=innerWidth<861?[10,30,50,70,90]:[7,18,29,40,51];
+  const pos=innerWidth<861?[12,31,50,69,88]:[8,16,24,32,40];
   const plots=SEEDS.map(([color,cat,i],k)=>{
     const p=document.createElement('div'); p.className='plot'; p.style.left=pos[k]+'%'; p.style.setProperty('--dur',(1.3+k*.17).toFixed(2)+'s');
     p.innerHTML=`<img class="egg-seed" src="assets/egg-${color}.webp" alt=""><div class="stem"><i class="leaf l"></i><i class="leaf r"></i></div><div class="veg"><img src="${vsrc(cat,i)}" alt=""></div><div class="mound"></div>`;
     g.appendChild(p); return p;
   });
-  const stemH=()=>Math.max(26,Math.min(64,innerWidth*.045));
+  const stemH=()=>Math.max(18,Math.min(42,innerWidth*.03));
   async function grow(p){ try{ await growInner(p); }catch(e){} }
   async function growInner(p){
     const egg=p.querySelector('.egg-seed'), stem=p.querySelector('.stem'), veg=p.querySelector('.veg'), leaves=p.querySelectorAll('.leaf');

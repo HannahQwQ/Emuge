@@ -9,8 +9,7 @@ index.html        页面本体：结构、样式和大部分交互脚本（含 C
 machine3d.js      首页可交互的 3D 公共装置（three.js）+ 像素屏幕动画
 assets/           图片：装置渲染图、蛋形装置、蔬菜表情（v-<类别>-<序号>.webp）
 media/            视频与模型
-  personal-app.mp4     个人装置 App 完整流程录屏
-  personal-wheel.mp4   蛋形装置屏幕里的情绪轮盘特写
+  personal-step1~4.mp4 个人装置屏幕录屏，按“读表情 / 拖轮盘选蔬菜 / 加特殊状态 / 种进校园地图”分段（已裁成圆形）
   public-screen.mp4    公共装置屏幕录屏
   emuge-machine.glb    公共装置 3D 模型（贴图已压缩，约 1MB）
 ```
@@ -36,7 +35,7 @@ python3 -m http.server 8000
 - **链接、演示视频、团队信息**：`index.html` 里搜索 `const CONFIG`。
   - `demoVideo` 填 `.mp4` 路径（如 `media/demo.mp4`）会直接播放；填 B 站等网页链接会显示跳转按钮。
   - `team` 里每人的 `photo` 填图片路径，留空显示占位卡片。
-- **个人装置两个视频**：`index.html` 里搜索 `media/personal-app.mp4` 和 `media/personal-wheel.mp4`。
+- **个人装置四段视频**：直接替换 `media/personal-step1.mp4` ~ `personal-step4.mp4`（圆形画面，正方形尺寸）；切换逻辑在脚本 `stepPlayer` 一段。
 - **公共装置录屏**：`CONFIG.links.publicScreenVideo`。
 - **首页大字母**：五个字母的 SVG 直接写在 `index.html` 里（搜索 `class="letter"`），倾斜效果在脚本 `letterPlanes` 一段。
 - **标题划线 / 琴弦效果**：脚本 `titleUnderline` 一段（振幅 `A=l.fs*.22`，衰减 `Math.exp(-t*3.2)`）。
