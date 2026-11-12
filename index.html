@@ -214,16 +214,30 @@ main,header,footer{position:relative;z-index:1}
 
 /* team */
 .team{position:relative;padding-top:clamp(60px,12vh,105px);overflow:hidden}
-.team-stage{position:relative;height:clamp(315px,46vw,480px)}
-.team-stage .machine{position:absolute;left:50%;bottom:0;width:clamp(112.5px,19vw,202.5px);transform:translateX(-50%);z-index:3;filter:drop-shadow(0 18px 22.5px rgba(0,0,0,.5))}
-.team-stage .egg-side{position:absolute;right:0;top:-4%;width:clamp(52.5px,8vw,90px);animation:bob 5s ease-in-out infinite;z-index:3}
-.member{position:absolute;width:clamp(90px,15vw,165px);aspect-ratio:3/4;background:#ECE6D8;border-radius:4.5px;padding:6px 6px 25.5px;box-shadow:0 13.5px 30px rgba(0,0,0,.4);transform:rotate(var(--r));transition:transform .4s cubic-bezier(.3,1.5,.5,1);z-index:2;color:#2A2A3A}
-.member:hover{transform:rotate(0) scale(1.06);z-index:4}
-.member .photo{width:100%;height:100%;border-radius:2.25px;background:repeating-linear-gradient(45deg,#E2DACA 0 7.5px,#DDD4C2 7.5px 15px);display:grid;place-items:center;overflow:hidden}
-.member .photo img{width:100%;height:100%;object-fit:cover}
-.member .photo span{font-size:9px;color:#8B8170;border:1.12px dashed #B4AA96;padding:3px 6px;border-radius:4.5px}
-.member .cap{position:absolute;left:7.5px;right:7.5px;bottom:4.5px;font-size:9.75px;font-weight:700;display:flex;justify-content:space-between;gap:4.5px}
-.member .cap em{font-style:normal;font-weight:500;color:#6B6658;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-stage{position:relative;height:clamp(420px,52vw,560px)}
+/* the two devices, live 3D */
+.t3d{position:absolute;z-index:3}
+.t3d canvas{display:block;width:100%;height:100%;opacity:0;transition:opacity .6s}
+.t3d.ready canvas{opacity:1}
+.t3d .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:opacity .6s}
+.t3d.ready .poster{opacity:0}
+.t3d.machine{left:50%;bottom:-2%;width:clamp(150px,24vw,255px);aspect-ratio:.82;transform:translateX(-50%)}
+.t3d.machine::before{content:"";position:absolute;left:-30%;right:-30%;top:-10%;bottom:-6%;z-index:-1;background:radial-gradient(ellipse 50% 50% at 50% 55%,rgba(8,9,30,.6),transparent 70%)}
+.t3d.egg{left:63%;top:44%;width:clamp(70px,10vw,112px);aspect-ratio:.8}
+/* hand-drawn portraits, recoloured as starlight chalk */
+.person{position:absolute;margin:0;width:var(--w,15%);text-align:center;z-index:2;animation:drift var(--d,7s) ease-in-out infinite;animation-delay:var(--dl,0s)}
+.person img{width:100%;height:auto;display:block;filter:drop-shadow(0 0 6px rgba(178,188,255,.55)) drop-shadow(0 0 18px rgba(130,145,255,.35));transition:filter .4s,transform .4s}
+.person:hover img{filter:drop-shadow(0 0 8px rgba(214,220,255,.9)) drop-shadow(0 0 26px rgba(150,165,255,.6));transform:scale(1.05) rotate(-2deg)}
+.person figcaption{margin-top:6px;font-size:12px;line-height:1.35;color:var(--ink);text-shadow:0 0 10px rgba(150,165,255,.6)}
+.person figcaption b{display:block;font-size:13.5px}
+.person figcaption em{font-style:normal;color:var(--muted);font-size:11px}
+.person.teacher img{filter:drop-shadow(0 0 6px rgba(255,226,160,.6)) drop-shadow(0 0 20px rgba(255,200,120,.35))}
+.person.teacher figcaption em{color:var(--corn)}
+.person .tw{position:absolute;width:6px;height:6px;pointer-events:none;background:radial-gradient(circle,#fff 0 30%,rgba(255,255,255,0) 70%);animation:tw 2.4s ease-in-out infinite}
+.person .tw::before,.person .tw::after{content:"";position:absolute;left:50%;top:50%;width:14px;height:1px;background:linear-gradient(90deg,transparent,#fff,transparent);transform:translate(-50%,-50%)}
+.person .tw::after{transform:translate(-50%,-50%) rotate(90deg)}
+@keyframes drift{0%,100%{transform:translateY(0) rotate(var(--r,0deg))}50%{transform:translateY(-10px) rotate(calc(var(--r,0deg) * -1))}}
+@keyframes tw{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1.1)}}
 .team-head{text-align:center;margin-bottom:18px}
 .team-head h2{font-family:var(--f-display);font-weight:800;font-size:clamp(27px,5.4vw,63px);line-height:1;margin:0 0 7.5px;letter-spacing:-.02em}
 .team-head p{margin:0;color:var(--muted)}
@@ -647,8 +661,8 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
     <div class="wrap">
       <div class="team-head"><h2 id="t-title">The people who planted it.</h2><p>Emuge 团队 · 同济大学</p></div>
       <div class="team-stage" id="teamStage">
-        <img class="machine" src="assets/arcade-front-solo.webp" alt="" width="438" height="700">
-        <img class="egg-side" src="assets/eggscreen-pink.webp" alt="">
+        <div class="t3d machine" data-kind="machine" data-model="media/emuge-machine.glb" aria-hidden="true"><img class="poster" src="assets/arcade-front-solo.webp" alt=""></div>
+        <div class="t3d egg" data-kind="egg" data-color="chili" data-model="media/personal-device.glb" aria-hidden="true"><img class="poster" src="assets/eggscreen-pink.webp" alt=""></div>
       </div>
     </div>
   </section>
@@ -683,11 +697,11 @@ const CONFIG = {
   },
   // 团队：photo 填图片路径（如 "assets/team-1.jpg"），留空显示占位
   team: [
-    { name: "成员 1", role: "分工待填", photo: "" },
-    { name: "成员 2", role: "分工待填", photo: "" },
-    { name: "成员 3", role: "分工待填", photo: "" },
-    { name: "成员 4", role: "分工待填", photo: "" },
-    { name: "成员 5", role: "分工待填", photo: "" }
+    { name: "成员 1", role: "分工待填", photo: "assets/team-1.webp" },
+    { name: "成员 2", role: "分工待填", photo: "assets/team-2.webp" },
+    { name: "成员 3", role: "分工待填", photo: "assets/team-3.webp" },
+    { name: "成员 4", role: "分工待填", photo: "assets/team-4.webp" },
+    { name: "老师姓名", role: "指导老师", photo: "assets/team-teacher.webp", teacher: true }
   ]
 };
 
@@ -979,11 +993,20 @@ const LETTER_PLANES=(function letterPlanes(){
    ============================================================ */
 (function team(){
   const st=document.getElementById('teamStage'), ft=document.getElementById('footTeam');
-  const spots=[[2,16,-9],[17,2,6],[33,34,-4],[62,30,5],[77,4,-7],[86,40,8]];
-  CONFIG.team.forEach((m,i)=>{ const [x,y,r]=spots[i%spots.length]; const d=document.createElement('figure'); d.className='member'; d.style.cssText=`left:${x}%;top:${y}%;--r:${r}deg;margin:0`;
-    d.innerHTML=`<div class="photo">${m.photo?`<img src="${m.photo}" alt="${m.name}">`:'<span>照片待补充</span>'}</div><figcaption class="cap">${m.name}<em>${m.role}</em></figcaption>`;
-    st.appendChild(d); const li=document.createElement('li'); li.textContent=m.name; ft.appendChild(li); });
-  if(window.gsap && window.ScrollTrigger && !REDUCED){ gsap.from('.member',{y:120,rotate:()=>rnd(-30,30),opacity:0,duration:.9,ease:'back.out(1.4)',stagger:.1,scrollTrigger:{trigger:st,start:'top 80%'}}); }
+  // [left%, top%, width%, tilt] — members in an arc, the teacher centred above the machine
+  const SPOTS=[[1,40,15,-4],[16,6,15,3],[69,6,15,-3],[84,40,15,4]], TEACHER=[41.5,4,17,0];
+  let k=0;
+  CONFIG.team.forEach((m,i)=>{ const [x,y,w,r]=m.teacher?TEACHER:SPOTS[k++%SPOTS.length];
+    const f=document.createElement('figure'); f.className='person'+(m.teacher?' teacher':'');
+    f.style.cssText=`left:${x}%;top:${y}%;--w:${w}%;--r:${r}deg;--d:${(6+i*.9).toFixed(1)}s;--dl:${(-i*1.3).toFixed(1)}s`;
+    const tw=[[8,12],[86,30],[20,78]].map(([a,b],n)=>`<i class="tw" style="left:${a}%;top:${b}%;animation-delay:${(n*.7+i*.4).toFixed(1)}s"></i>`).join('');
+    f.innerHTML=`${m.photo?`<img src="${m.photo}" alt="${m.name}的手绘形象">`:''}${tw}<figcaption><b>${m.name}</b><em>${m.role}</em></figcaption>`;
+    st.appendChild(f); const li=document.createElement('li'); li.textContent=m.teacher?`${m.name}（${m.role}）`:m.name; ft.appendChild(li); });
+  if(window.gsap && window.ScrollTrigger && !REDUCED){
+    // portraits appear like constellations being drawn: wipe in from the top with a glow
+    gsap.fromTo('.person img',{clipPath:'inset(-30% -30% 130% -30%)',opacity:.2},{clipPath:'inset(-30% -30% -30% -30%)',opacity:1,duration:1.3,ease:'power2.out',stagger:.18,clearProps:'clipPath',scrollTrigger:{trigger:st,start:'top 78%'}});
+    gsap.from('.person figcaption',{opacity:0,y:10,duration:.6,stagger:.18,delay:.8,scrollTrigger:{trigger:st,start:'top 78%'}});
+  }
 })();
 
 /* ============================================================
@@ -1003,5 +1026,6 @@ if(window.gsap && window.ScrollTrigger && !REDUCED){
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="personal3d.js"></script>
 <script src="walker3d.js"></script>
+<script src="team3d.js"></script>
 </body>
 </html>
