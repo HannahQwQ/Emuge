@@ -12,6 +12,7 @@
   const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canvas=document.createElement('canvas'); el.appendChild(canvas);
   const bubble=document.createElement('span'); bubble.className='walker-bubble'; el.appendChild(bubble);
+  const hit=document.createElement('span'); hit.className='walker-hit'; el.appendChild(hit);   // generous hover/click target
   const LINES=['嗨～','今天心情怎么样？','♪ ♫','来浇浇水吧','种下一颗心情？'];
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
   renderer.setPixelRatio(Math.min(2,devicePixelRatio||1)); renderer.outputEncoding=THREE.sRGBEncoding;
@@ -84,14 +85,14 @@
     switch(i){ case 0:return [x+r+d,y,0]; case 1:return arc(x+W-r,y+r,-Math.PI/2); case 2:return [x+W,y+r+d,Math.PI/2]; case 3:return arc(x+W-r,y+H-r,0);
       case 4:return [x+W-r-d,y+H,Math.PI]; case 5:return arc(x+r,y+H-r,Math.PI/2); case 6:return [x,y+H-r-d,Math.PI*1.5]; default:return arc(x+r,y+r,Math.PI); } }
   // ---- behaviour: walk, greet (stop + face you), jump ----
-  let mode='walk', mt=0, yaw=0, lapGreeted=-1, onTop=false;
+  let mode='walk', mt=0, yaw=0, lapGreeted=-1, onTop=false, nextGreet=2.5, sinceGreet=99;
   const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
   function say(on){ if(on&&onTop){ bubble.textContent=LINES[Math.floor(Math.random()*LINES.length)]; bubble.classList.add('show'); } else bubble.classList.remove('show'); }
-  function greet(len){ if(mode!=='walk') return; mode='greet'; mt=0; greetLen=len||3.2; }
+  function greet(len){ if(mode!=='walk') return; mode='greet'; mt=0; greetLen=len||3.2; sinceGreet=0; }
   let greetLen=3.2;
   function jump(){ if(mode==='jump') return; mode='jump'; mt=0; say(true); bubble.textContent='♪'; }
-  canvas.addEventListener('pointerenter',()=>greet(2.2));
-  canvas.addEventListener('click',jump);
+  hit.addEventListener('pointerenter',()=>{ if(mode==='walk') greet(2.4); });
+  hit.addEventListener('click',e=>{ e.preventDefault(); jump(); });
   function frame(dt){
     if(!geo) return;
     const speed=Math.max(56,geo.W*.055); mt+=dt;
@@ -112,7 +113,10 @@
     const [px,py,a]=at(s); onTop=Math.abs(a)<.02;
     // now and then, halfway along the top edge, stop and say hello
     const lap=Math.floor(s/geo.total), d=((s%geo.total)+geo.total)%geo.total, onMid=onTop && d>geo.L[0]*.35 && d<geo.L[0]*.65;
-    if(walking && onMid && lap!==lapGreeted){ lapGreeted=lap; if(Math.random()<.65) greet(3.2); }
+    // say hello often enough to be seen: soon after it appears, then every 7–12 s, and always mid-top-edge
+    sinceGreet+=dt; if(walking){ nextGreet-=dt;
+      if(onMid && lap!==lapGreeted && sinceGreet>4){ lapGreeted=lap; nextGreet=7+Math.random()*5; greet(3.2); }
+      else if(nextGreet<=0){ nextGreet=7+Math.random()*5; greet(2.8); } }
     // feet (bottom-centre of the element) on the border point, body leaning outward along the normal
     el.style.transform=`translate(${(px-geo.w/2).toFixed(2)}px,${(py-geo.h).toFixed(2)}px) rotate(${a.toFixed(4)}rad)`;
     if(ready){
@@ -122,7 +126,7 @@
       body.rotation.z=walking?Math.sin(phase)*.03:(mode==='greet'?Math.sin(mt*9)*.04:0);
       renderer.render(scene,camera); }
   }
-  el._seek=f=>{ if(geo) s=geo.total*f; }; el._greet=()=>greet(3.2); el._jump=jump;
+  el._seek=f=>{ if(geo) s=geo.total*f; }; el._greet=()=>greet(3.2); el._jump=jump; el._state=()=>({mode,mt:+mt.toFixed(2),yaw:+yaw.toFixed(2),onTop});
   new ResizeObserver(measure).observe(card);
   let on=false, last=0;
   function tick(now){ if(!on) return; const dt=Math.min(.05,(now-(last||now))/1000); last=now; frame(REDUCED?0:dt); requestAnimationFrame(tick); }
