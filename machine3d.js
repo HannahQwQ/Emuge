@@ -174,7 +174,7 @@
       const texOpen=tl.load(base+'cat.webp'), texBlink=tl.load(base+'cat-blink.webp'); [texOpen,texBlink].forEach(t=>{ t.encoding=THREE.sRGBEncoding; t.anisotropy=4; });
       renderer.localClippingEnabled=true; const clip=new THREE.Plane(V(0,1,0),0);
       const mat=new THREE.SpriteMaterial({map:texOpen,transparent:true,alphaTest:.04,toneMapped:false,clippingPlanes:[clip]});
-      const spr=new THREE.Sprite(mat); spr.center.set(.5,0); const h=Math.min(sz.x,sz.z)*.95; spr.scale.set(h*640/608,h,1);
+      const spr=new THREE.Sprite(mat); spr.center.set(.5,0); const h=Math.min(sz.x,sz.z)*.7; spr.scale.set(h*640/608,h,1);
       const local=model.worldToLocal(cc.clone()); const rimY=model.worldToLocal(V(0,bb.max.y,0)).y;
       spr.position.set(local.x,rimY-h,local.z); spr.visible=false; spr.userData.part='cat'; model.add(spr); hoverables.push(spr);
       const floorL=model.worldToLocal(V(cc.x,bb.min.y+sz.y*.04,cc.z));
@@ -254,7 +254,7 @@
         else if(c.state==='down'){ c.up=Math.max(0,1-c.t/.55); if(c.up<=0){ c.state='hidden'; c.t=0; c.wait=1.4+Math.random()*2.2; } }
         if(c.state!=='hidden'){ c.spr.visible=true; c.clip.constant=-model.localToWorld(c.floorL.clone()).y; const e=c.up<1?1-Math.pow(1-c.up,3):1;
           c.vj+=(-80*c.jump-8*c.vj)*dt; c.jump+=c.vj*dt;
-          const peekH=c.h*.55; c.spr.position.y=c.rimY-c.h+e*peekH+Math.max(0,c.jump)*c.h*.12+(c.state==='peek'?Math.sin(c.t*3)*c.h*.01:0);
+          const peekH=c.h*.6; c.spr.position.y=c.rimY-c.h+e*peekH+Math.max(0,c.jump)*c.h*.12+(c.state==='peek'?Math.sin(c.t*3)*c.h*.01:0);
           // look around: lean left/right while peeking
           const look=c.state==='peek'?Math.sin(c.t*1.6)*.12:0; c.tilt+=(look-c.tilt)*Math.min(1,dt*5); c.mat.rotation=c.tilt;
           // blink every couple of seconds (sometimes twice)
