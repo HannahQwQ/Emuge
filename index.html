@@ -655,7 +655,7 @@ footer a{text-decoration:none}footer a:hover{text-decoration:underline}
           <div class="eyebrow" style="color:#8FE3A6"><i></i>演示 · Demo</div>
           <h2 id="d-title">See it in the room.</h2>
           <p>一段完整的使用过程：一个人在个人装置上种下心情，另一个人在公共装置前给出回应。</p>
-          <p class="small" id="videoNote">视频还在录制，上线后会直接在这里播放。</p>
+          <p class="small" id="videoNote">视频静音播放，点右下角喇叭打开声音。</p>
         </div>
       </div>
     </div>
@@ -699,7 +699,7 @@ const CONFIG = {
     // 演示视频：填 .mp4 直链会直接播放；填其他网址（B站/YouTube 等）会显示“观看视频”按钮
     // 公共装置屏幕录屏（.mp4，放进 media/ 文件夹），留空显示占位
     publicScreenVideo: "media/public-screen.mp4",
-    demoVideo: ""
+    demoVideo: "media/demo.mp4"
   },
   // 团队：photo 填图片路径（如 "assets/team-1.jpg"），留空显示占位
   team: [
@@ -1077,7 +1077,16 @@ const LETTER_PLANES=(function letterPlanes(){
    ============================================================ */
 (function demo(){
   const slot=document.getElementById('videoSlot'), note=document.getElementById('videoNote'), url=CONFIG.links.demoVideo.trim();
-  if(url && /\.(mp4|webm|mov)(\?|$)/i.test(url)){ slot.innerHTML=`<video src="${url}" controls playsinline muted loop autoplay></video>`; note.textContent='视频已静音自动播放，点开声音听蔬菜唱歌。'; return; }
+  if(url && /\.(mp4|webm|mov)(\?|$)/i.test(url)){
+    // only fetched when the section comes near; plays muted while on screen, pauses when scrolled away
+    slot.innerHTML=`<video src="${url}" poster="assets/demo-poster.jpg" controls playsinline muted loop preload="none" aria-label="Emuge 演示视频"></video>`;
+    const v=slot.querySelector('video'); let userPaused=false;
+    v.addEventListener('pause',()=>{ if(v.dataset.auto!=='1') userPaused=true; v.dataset.auto=''; });
+    v.addEventListener('play',()=>{ userPaused=false; });
+    new IntersectionObserver(es=>es.forEach(e=>{
+      if(e.isIntersecting){ if(!userPaused) v.play().catch(()=>{}); }
+      else if(!v.paused){ v.dataset.auto='1'; v.pause(); } }),{threshold:.35}).observe(v);
+    note.textContent='视频静音播放，点右下角喇叭打开声音。'; return; }
   slot.innerHTML=`<div class="video-empty"><div>${url?`<a class="play" href="${url}" target="_blank" rel="noopener" aria-label="观看演示视频"></a><strong>观看演示视频 ↗</strong>`:`<div class="play" aria-hidden="true"></div><strong>演示视频录制中</strong><span>链接待补充</span>`}</div></div>
     <div class="thumbs" aria-hidden="true"><div><img src="assets/eggscreen-yellow.webp" alt=""></div><div><img src="assets/arcade-front-solo.webp" alt=""></div><div><img src="assets/v-cabbage-6.webp" alt=""></div></div>`;
   if(url) note.textContent='点击上方按钮在新页面观看。';
