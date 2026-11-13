@@ -88,10 +88,10 @@ main,header,footer{position:relative;z-index:1}
 .hero-copy{position:absolute;left:5.5%;top:35%;width:64%;z-index:4}
 .hero-copy .title-wrap{position:relative;display:inline-block}
 .uline{position:absolute;height:.7em;overflow:visible;pointer-events:none;opacity:0;
-  -webkit-mask-image:linear-gradient(90deg,transparent calc(var(--x,0px) - 1.25em),#000 calc(var(--x,0px) - .35em),#000 calc(var(--x,0px) + .35em),transparent calc(var(--x,0px) + 1.25em));
-  mask-image:linear-gradient(90deg,transparent calc(var(--x,0px) - 1.25em),#000 calc(var(--x,0px) - .35em),#000 calc(var(--x,0px) + .35em),transparent calc(var(--x,0px) + 1.25em));
-  filter:drop-shadow(0 0 .1em rgba(242,194,48,.6));transform-origin:50% 50%}
-.uline path{fill:none;stroke:var(--corn);stroke-linecap:round;stroke-linejoin:round}
+  -webkit-mask-image:linear-gradient(90deg,transparent calc(var(--x,0px) - 1.3em),#000 calc(var(--x,0px) - .55em),#000 calc(var(--x,0px) + .55em),transparent calc(var(--x,0px) + 1.3em));
+  mask-image:linear-gradient(90deg,transparent calc(var(--x,0px) - 1.3em),#000 calc(var(--x,0px) - .55em),#000 calc(var(--x,0px) + .55em),transparent calc(var(--x,0px) + 1.3em));
+  filter:drop-shadow(0 0 .1em rgba(255,236,200,.45));transform-origin:50% 50%}
+.uline path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .hero h1{font-family:var(--f-display);font-weight:800;font-size:clamp(33px,7.6vw,96px);line-height:.98;letter-spacing:-.02em;margin:0;text-wrap:balance;text-shadow:0 4.5px 22.5px rgba(9,10,34,.55)}
 .hero-sub{position:absolute;left:5.5%;top:61%;width:clamp(225px,34%,390px);z-index:4}
 .hero-sub p{margin:0 0 10.5px;color:var(--ink);font-size:clamp(11.25px,1.25vw,14.25px);line-height:1.55;text-shadow:0 1.5px 10.5px rgba(9,10,34,.8)}
@@ -912,7 +912,7 @@ const LETTER_PLANES=(function letterPlanes(){
   if(REDUCED || matchMedia('(hover: none)').matches) return;
   const NS='http://www.w3.org/2000/svg';
   const wrap=document.getElementById('titleWrap'), h1=document.getElementById('hero-title');
-  let lines=[];
+  let lines=[], uid=0;
   function build(){
     lines.forEach(l=>l.el.remove()); lines=[];
     const range=document.createRange(); range.selectNodeContents(h1);
@@ -926,8 +926,13 @@ const LETTER_PLANES=(function letterPlanes(){
       const w=r.right-r.left, h=fs*.7, mid=r.bottom-wr.top-fs*.24;
       el.style.left=(r.left-wr.left)+'px'; el.style.width=w+'px'; el.style.top=(mid-h/2)+'px';
       el.setAttribute('viewBox',`0 0 ${w} ${h}`); el.setAttribute('aria-hidden','true');
-      const path=document.createElementNS(NS,'path'); path.setAttribute('stroke-width',(fs*.075).toFixed(2)); el.appendChild(path); wrap.appendChild(el);
-      const l={el,path,w,h,fs,x:0,o:0,s:0,init:false,pt:-1e9,amp:0,cx:0,inHear:false,hear:null};
+      // EMUGE colours — corn yellow, cabbage green, eggplant purple, tomato red, soil brown — riding along with the cursor
+      const gid='ulg'+(uid++), defs=document.createElementNS(NS,'defs'), grad=document.createElementNS(NS,'linearGradient');
+      grad.setAttribute('id',gid); grad.setAttribute('gradientUnits','userSpaceOnUse'); grad.setAttribute('y1','0'); grad.setAttribute('y2','0');
+      [['0','#F2C230'],['.25','#9ACD6A'],['.5','#9670CF'],['.75','#E5483A'],['1','#B8946C']].forEach(([o,c])=>{ const st=document.createElementNS(NS,'stop'); st.setAttribute('offset',o); st.setAttribute('stop-color',c); grad.appendChild(st); });
+      defs.appendChild(grad); el.appendChild(defs);
+      const path=document.createElementNS(NS,'path'); path.setAttribute('stroke-width',(fs*.075).toFixed(2)); path.setAttribute('stroke',`url(#${gid})`); el.appendChild(path); wrap.appendChild(el);
+      const l={el,path,grad,w,h,fs,x:0,o:0,s:0,init:false,pt:-1e9,amp:0,cx:0,inHear:false,hear:null};
       if(hear && Math.abs(hear.top-r.top)<fs*.3) l.hear=[hear.left-r.left, hear.right-r.left];
       draw(l,0); lines.push(l);
     }
@@ -965,6 +970,7 @@ const LETTER_PLANES=(function letterPlanes(){
       l.inHear=overHear;
       if(now-l.pt<1800) l.cx += (l.x-l.cx)*.12;
       const ringing=draw(l,now);
+      l.grad.setAttribute('x1',(l.x-fs*.85).toFixed(1)); l.grad.setAttribute('x2',(l.x+fs*.85).toFixed(1));
       l.el.style.setProperty('--x',l.x.toFixed(1)+'px'); l.el.style.opacity=l.o.toFixed(3); l.el.style.transform=`scaleY(${(.4+.6*l.s).toFixed(3)})`;
       if(ringing||Math.abs(tx-l.x)>.3||Math.abs(target-l.o)>.005) busy=true;
     }
